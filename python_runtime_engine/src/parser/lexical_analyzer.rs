@@ -1,5 +1,4 @@
 
-use std::str::Chars;
 use super::source_buffer::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -98,30 +97,6 @@ pub enum Token {
     Number(u32, u32, String)
 }
 
-
-
-
-pub fn lexer(input: &String) -> Result<Vec<Token>, String> {
-    let mut result = Vec::new();
-
-    let mut it = input.chars().peekable();
-    while let Some(&c) = it.peek() {
-        if c.is_alphabetic() || c == '_' {
-            it.next();
-            
-        }
-        match c {
-            'T' | 'e' | 's'| 't' => {
-                println!(".");
-                it.next(); 
-            },
-            _ => return Err("Syntax Error!".to_string())
-        }
-    }
-
-    Ok(result)
-}
-
 /// Analyze source code for reserved keyword or name literal
 pub fn is_reserved_keyword_or_name_from_buffer(buffer: &mut SourceBuffer) -> Option<Token> {
     let start = buffer.index();
@@ -136,9 +111,42 @@ pub fn is_reserved_keyword_or_name_from_buffer(buffer: &mut SourceBuffer) -> Opt
         match element {
             Some(text) => {
                 match text.as_str() {
-                    "False" =>  return Some(Token::False(start, buffer.index())),
-                    "None"  =>  return Some(Token::None(start, buffer.index())),
-                    "True"  =>  return Some(Token::True(start, buffer.index())),
+                    "False"     =>  return Some(Token::False(start, buffer.index())),
+                    "None"      =>  return Some(Token::None(start, buffer.index())),
+                    "True"      =>  return Some(Token::True(start, buffer.index())),
+                    "and"       =>  return Some(Token::And(start, buffer.index())),
+                    "as"        =>  return Some(Token::As(start, buffer.index())),
+                    "assert"    =>  return Some(Token::Assert(start, buffer.index())),
+                    "async"     =>  return Some(Token::Async(start, buffer.index())),
+                    "await"     =>  return Some(Token::Await(start, buffer.index())),
+                    "break"     =>  return Some(Token::Break(start, buffer.index())),
+                    "class"     =>  return Some(Token::Class(start, buffer.index())),
+                    "continue"  =>  return Some(Token::Continue(start, buffer.index())),
+                    "div"       =>  return Some(Token::Div(start, buffer.index())),
+                    "del"       =>  return Some(Token::Del(start, buffer.index())),
+                    "elif"      =>  return Some(Token::Elif(start, buffer.index())),
+                    "else"      =>  return Some(Token::Else(start, buffer.index())),
+                    "except"    =>  return Some(Token::Except(start, buffer.index())),
+                    "finally"   =>  return Some(Token::Finally(start, buffer.index())),
+                    "for"       =>  return Some(Token::For(start, buffer.index())),
+                    "from"      =>  return Some(Token::From(start, buffer.index())),
+                    "global"    =>  return Some(Token::Global(start, buffer.index())),
+                    "if"        =>  return Some(Token::If(start, buffer.index())),
+                    "import"    =>  return Some(Token::Import(start, buffer.index())),
+                    "in"        =>  return Some(Token::In(start, buffer.index())),
+                    "is"        =>  return Some(Token::Is(start, buffer.index())),
+                    "lambda"    =>  return Some(Token::Lambda(start, buffer.index())),
+                    "nonlocal"  =>  return Some(Token::Nonlocal(start, buffer.index())),
+                    "not"       =>  return Some(Token::Not(start, buffer.index())),
+                    "or"        =>  return Some(Token::Or(start, buffer.index())),
+                    "pass"      =>  return Some(Token::Pass(start, buffer.index())),
+                    "raise"     =>  return Some(Token::Raise(start, buffer.index())),
+                    "return"    =>  return Some(Token::Return(start, buffer.index())),
+                    "try"       =>  return Some(Token::Try(start, buffer.index())),
+                    "while"     =>  return Some(Token::While(start, buffer.index())),
+                    "with"      =>  return Some(Token::With(start, buffer.index())),
+                    "yield"     =>  return Some(Token::Yield(start, buffer.index())),
+
                     _   => return Some(Token::Name(start, buffer.index(), text))
                 }
             },
@@ -146,51 +154,6 @@ pub fn is_reserved_keyword_or_name_from_buffer(buffer: &mut SourceBuffer) -> Opt
         } 
     }
     None
-}
-
-/// Analyze source code for reserved keyword or name literal
-pub fn is_reserved_keyword_or_name(text: &Chars, index: u32) -> Option<(Token, u32)> {
-    let mut buffer = String::new();
-    
-    
-    match buffer.as_str() {
-        "False"     => Some((Token::False(index, index + 5), 5)),
-        "None"      => Some((Token::None(index, index + 4), 4)),
-        "True"      => Some((Token::True(index, index + 4), 4)),
-        "and"       => Some((Token::And(index, index + 3), 3)),
-        "as"        => Some((Token::As(index, index + 2), 2)),
-        "assert"    => Some((Token::Assert(index, index + 6), 6)),
-        "async"     => Some((Token::Async(index, index + 5), 5)),
-        "await"     => Some((Token::Await(index, index + 5), 5)),
-        "break"     => Some((Token::Break(index, index + 5), 5)),
-        "class"     => Some((Token::Class(index, index + 5), 5)),
-        "continue"  => Some((Token::Continue(index, index + 8), 8)),
-        "def"       => Some((Token::Def(index, index + 3), 3)),
-        "del"       => Some((Token::Del(index, index + 3), 3)),
-        "elif"      => Some((Token::Elif(index, index + 4), 4)),
-        "else"      => Some((Token::Else(index, index + 4), 4)),
-        "except"    => Some((Token::Except(index, index + 6), 6)),
-        "finally"   => Some((Token::Finally(index, index + 7), 7)),
-        "for"       => Some((Token::For(index, index + 3), 3)),
-        "from"      => Some((Token::From(index, index + 4), 4)),
-        "global"    => Some((Token::Global(index, index + 6), 6)),
-        "if"        => Some((Token::If(index, index + 2), 2)),
-        "import"    => Some((Token::Import(index, index + 6), 6)),
-        "in"        => Some((Token::In(index, index + 2), 2)),
-        "is"        => Some((Token::True(index, index + 2), 2)),
-        "lambda"    => Some((Token::Lambda(index, index + 6), 6)),
-        "nonlocal"  => Some((Token::Nonlocal(index, index + 8), 8)),
-        "not"       => Some((Token::Not(index, index + 3), 3)),
-        "or"        => Some((Token::Or(index, index + 2), 2)),
-        "pass"      => Some((Token::Pass(index, index + 4), 4)),
-        "raise"     => Some((Token::Raise(index, index + 5), 5)),
-        "return"    => Some((Token::Return(index, index + 6), 6)),
-        "try"       => Some((Token::Try(index, index + 3), 3)),
-        "while"     => Some((Token::While(index, index + 5), 5)),
-        "with"      => Some((Token::With(index, index + 4), 4)),
-        "yield"     => Some((Token::Yield(index, index + 5), 5)),
-        _ => None
-    } 
 }
 
 /// Analyzes source code for operators or delimiters.
@@ -1174,6 +1137,96 @@ mod tests {
         match res {
             Some(x) => {
                 assert_eq!(x, Token::True(0, 4));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn reserved_keyword_and() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("and");
+        
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+        
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::And(0, 3));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn reserved_keyword_as() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("as");
+        
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+        
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::As(0, 2));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn reserved_keyword_assert() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("assert");
+        
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+        
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Assert(0, 6));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn reserved_keyword_async() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("async");
+        
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+        
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Async(0, 5));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn reserved_keyword_await() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("await");
+        
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+        
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Await(0, 5));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn reserved_keyword_break() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("break");
+        
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+        
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Break(0, 5));
             },
             None => assert!(false)
         }
