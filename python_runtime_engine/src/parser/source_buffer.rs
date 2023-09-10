@@ -16,6 +16,7 @@ pub trait SourceBufferMethods {
     fn is_octet_digit(&self) -> bool;
     fn is_hex_digit(&self) -> bool;
     fn is_binary_digit(&self) -> bool;
+    fn length(&self) -> u32;
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -44,7 +45,7 @@ impl SourceBufferMethods for SourceBuffer {
         true
     }
 
-    // Peek current character
+    /// Peek current character
     fn peek_char(&self) -> char {
         ' '
     }
@@ -107,5 +108,10 @@ impl SourceBufferMethods for SourceBuffer {
     /// Checks current character for binary digits
     fn is_binary_digit(&self) -> bool {
         false
+    }
+
+    /// Total characters in source buffer.
+    fn length(&self) -> u32 {
+        self.buffer.len() as u32
     }
 }

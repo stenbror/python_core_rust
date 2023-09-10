@@ -105,110 +105,130 @@
 <a href="#105" id="105">105</a>
 <a href="#106" id="106">106</a>
 <a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
 </pre></div><pre class="rust"><code>
 <span class="kw">pub trait </span>SourceBufferMethods {
     <span class="kw">fn </span>new() -&gt; <span class="self">Self</span>;
-    <span class="kw">fn </span>from_text(text: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; ();
-    <span class="kw">fn </span>from_file(path_and_file: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; bool;
-    <span class="kw">fn </span>peek_char() -&gt; char;
-    <span class="kw">fn </span>peek_three_chars() -&gt; (char, char, char);
-    <span class="kw">fn </span>next() -&gt; ();
-    <span class="kw">fn </span>next_two() -&gt; ();
-    <span class="kw">fn </span>next_three() -&gt; ();
-    <span class="kw">fn </span>is_end_of_file() -&gt; bool;
-    <span class="kw">fn </span>index() -&gt; u32;
-    <span class="kw">fn </span>is_literal_start() -&gt; bool;
-    <span class="kw">fn </span>is_literal_character() -&gt; bool;
-    <span class="kw">fn </span>is_digit() -&gt; bool;
-    <span class="kw">fn </span>is_octet_digit() -&gt; bool;
-    <span class="kw">fn </span>is_hex_digit() -&gt; bool;
-    <span class="kw">fn </span>is_binary_digit() -&gt; bool;
+    <span class="kw">fn </span>from_text(<span class="kw-2">&amp;mut </span><span class="self">self</span>, text: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; ();
+    <span class="kw">fn </span>from_file(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path_and_file: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; bool;
+    <span class="kw">fn </span>peek_char(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; char;
+    <span class="kw">fn </span>peek_three_chars(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (char, char, char);
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; ();
+    <span class="kw">fn </span>next_two(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; ();
+    <span class="kw">fn </span>next_three(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; ();
+    <span class="kw">fn </span>is_end_of_file(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool;
+    <span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32;
+    <span class="kw">fn </span>is_literal_start(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool;
+    <span class="kw">fn </span>is_literal_character(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool;
+    <span class="kw">fn </span>is_digit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool;
+    <span class="kw">fn </span>is_octet_digit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool;
+    <span class="kw">fn </span>is_hex_digit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool;
+    <span class="kw">fn </span>is_binary_digit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool;
+    <span class="kw">fn </span>length(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32;
 }
 
 <span class="attr">#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 </span><span class="kw">pub struct </span>SourceBuffer {
-
+    buffer: Vec&lt;char&gt;,
+    position: u32
 }
 
 <span class="kw">impl </span>SourceBufferMethods <span class="kw">for </span>SourceBuffer {
     
     <span class="doccomment">/// Initialize a new source buffer
     </span><span class="kw">fn </span>new() -&gt; SourceBuffer {
-        SourceBuffer {  }
+        SourceBuffer {
+            buffer: Vec::new(),
+            position: <span class="number">0
+          </span>}
     }
 
     <span class="doccomment">/// Initialize source buffer from a string
-    </span><span class="kw">fn </span>from_text(text: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; () {
-
+    </span><span class="kw">fn </span>from_text(<span class="kw-2">&amp;mut </span><span class="self">self</span>, text: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; () {
+        <span class="self">self</span>.buffer = text.chars().collect();
     }
 
     <span class="doccomment">/// Initialize source buffer from given file and path.
-    </span><span class="kw">fn </span>from_file(path_and_file: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; bool {
+    </span><span class="kw">fn </span>from_file(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path_and_file: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; bool {
         <span class="bool-val">true
     </span>}
 
-    <span class="comment">// Peek current character
-    </span><span class="kw">fn </span>peek_char() -&gt; char {
+    <span class="doccomment">/// Peek current character
+    </span><span class="kw">fn </span>peek_char(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; char {
         <span class="string">&#39; &#39;
     </span>}
 
     <span class="doccomment">/// Peek the next three characters in buffer
-    </span><span class="kw">fn </span>peek_three_chars() -&gt; (char, char, char) {
+    </span><span class="kw">fn </span>peek_three_chars(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (char, char, char) {
         (<span class="string">&#39; &#39;</span>, <span class="string">&#39; &#39;</span>, <span class="string">&#39; &#39;</span>)
     }
 
     <span class="doccomment">/// Foreward one character in buffer
-    </span><span class="kw">fn </span>next() -&gt; () {
+    </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; () {
 
     }
 
     <span class="doccomment">/// Foreward two characters in buffer
-    </span><span class="kw">fn </span>next_two() -&gt; () {
+    </span><span class="kw">fn </span>next_two(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; () {
 
     }
 
     <span class="doccomment">/// Foreward three characters in buffer
-    </span><span class="kw">fn </span>next_three() -&gt; () {
+    </span><span class="kw">fn </span>next_three(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; () {
 
     }
 
     <span class="doccomment">/// Check for if we are at end of file.
-    </span><span class="kw">fn </span>is_end_of_file() -&gt; bool {
+    </span><span class="kw">fn </span>is_end_of_file(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="bool-val">true
     </span>}
 
     <span class="doccomment">/// Current position in source buffer.
-    </span><span class="kw">fn </span>index() -&gt; u32 {
-        <span class="number">0
-    </span>}
+    </span><span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+        <span class="self">self</span>.position
+    }
 
     <span class="doccomment">/// Checks current character if it&#39;s valid start character.
-    </span><span class="kw">fn </span>is_literal_start() -&gt; bool {
+    </span><span class="kw">fn </span>is_literal_start(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="bool-val">false
     </span>}
     
     <span class="doccomment">/// Checks current character if it&#39;s valid character.
-    </span><span class="kw">fn </span>is_literal_character() -&gt; bool {
+    </span><span class="kw">fn </span>is_literal_character(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="bool-val">false
     </span>}
 
     <span class="doccomment">/// Checks current character for decimal digits
-    </span><span class="kw">fn </span>is_digit() -&gt; bool {
+    </span><span class="kw">fn </span>is_digit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="bool-val">false
     </span>}
 
     <span class="doccomment">/// Checks current character for octal digits
-    </span><span class="kw">fn </span>is_octet_digit() -&gt; bool {
+    </span><span class="kw">fn </span>is_octet_digit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="bool-val">false
     </span>}
 
     <span class="doccomment">/// Checks current character for hexadecimal digits
-    </span><span class="kw">fn </span>is_hex_digit() -&gt; bool {
+    </span><span class="kw">fn </span>is_hex_digit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="bool-val">false
     </span>}
 
     <span class="doccomment">/// Checks current character for binary digits
-    </span><span class="kw">fn </span>is_binary_digit() -&gt; bool {
+    </span><span class="kw">fn </span>is_binary_digit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="bool-val">false
     </span>}
+
+    <span class="doccomment">/// Total characters in source buffer.
+    </span><span class="kw">fn </span>length(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+        <span class="self">self</span>.buffer.len() <span class="kw">as </span>u32
+    }
 }</code></pre></div></section></main></body></html>
