@@ -1,13 +1,19 @@
 
-use python_runtime_engine::parser::lexical_analyzer::lexer;
+use python_runtime_engine::parser::lexical_analyzer::is_reserved_keyword_or_name_from_buffer;
+use python_runtime_engine::parser::source_buffer::*;
 
 fn main() {
     println!("Hello, world!");
-    let source = "Test5".to_string();
-    let res = lexer(&source);
+    
+    let mut buffer = SourceBuffer::new();
+    buffer.from_text("False");
+        
+    let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+        
     match res {
-        Ok(x) => println!("Ok!"),
-        Err(e) =>   println!("Error!")
+        Some(x) => {
+            println!("Success!")
+        },
+        _ => println!("Failure!")
     }
-
 }

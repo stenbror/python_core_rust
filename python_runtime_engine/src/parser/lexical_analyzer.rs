@@ -122,8 +122,30 @@ pub fn lexer(input: &String) -> Result<Vec<Token>, String> {
     Ok(result)
 }
 
-fn is_letter_or_digit(ch: char) -> bool {
-    ch.is_alphanumeric()  || ch == '_'
+/// Analyze source code for reserved keyword or name literal
+pub fn is_reserved_keyword_or_name_from_buffer(buffer: &mut SourceBuffer) -> Option<Token> {
+    let start = buffer.index();
+
+    if buffer.is_literal_start() {
+        while buffer.is_literal_character() {
+            buffer.next();
+        }
+
+        let element = buffer.slice(start, buffer.index() - 1);
+
+        match element {
+            Some(text) => {
+                match text.as_str() {
+                    "False" =>  return Some(Token::False(start, buffer.index())),
+                    "None"  =>  return Some(Token::None(start, buffer.index())),
+                    "True"  =>  return Some(Token::True(start, buffer.index())),
+                    _   => return Some(Token::Name(start, buffer.index(), text))
+                }
+            },
+            _ => return None
+        } 
+    }
+    None
 }
 
 /// Analyze source code for reserved keyword or name literal
@@ -1109,6 +1131,51 @@ mod tests {
                 assert!(false)
             },
             None => assert!(true)
+        }
+    }
+
+    #[test]
+    fn reserved_keyword_false() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("False");
+        
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+        
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::False(0, 5));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn reserved_keyword_none() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("None");
+        
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+        
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::None(0, 4));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn reserved_keyword_true() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("True");
+        
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+        
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::True(0, 4));
+            },
+            None => assert!(false)
         }
     }
 
