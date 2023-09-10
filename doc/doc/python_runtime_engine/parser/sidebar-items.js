@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["lexical_analyzer"]};
+window.SIDEBAR_ITEMS = {"mod":["lexical_analyzer","source_buffer"]};

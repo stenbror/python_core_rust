@@ -1,5 +1,6 @@
 
 use std::str::Chars;
+use super::source_buffer::SourceBuffer;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Token {
@@ -121,9 +122,14 @@ pub fn lexer(input: &String) -> Result<Vec<Token>, String> {
     Ok(result)
 }
 
+fn is_letter_or_digit(ch: char) -> bool {
+    ch.is_alphanumeric()  || ch == '_'
+}
+
 /// Analyze source code for reserved keyword or name literal
-pub fn is_reserved_keyword_or_name(text: &mut Chars, index: u32) -> Option<(Token, u32)> {
+pub fn is_reserved_keyword_or_name(text: &Chars, index: u32) -> Option<(Token, u32)> {
     let mut buffer = String::new();
+    
     
     match buffer.as_str() {
         "False"     => Some((Token::False(index, index + 5), 5)),

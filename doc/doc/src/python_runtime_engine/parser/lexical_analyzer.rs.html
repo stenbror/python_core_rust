@@ -813,8 +813,15 @@
 <a href="#813" id="813">813</a>
 <a href="#814" id="814">814</a>
 <a href="#815" id="815">815</a>
+<a href="#816" id="816">816</a>
+<a href="#817" id="817">817</a>
+<a href="#818" id="818">818</a>
+<a href="#819" id="819">819</a>
+<a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
 </pre></div><pre class="rust"><code>
 <span class="kw">use </span>std::str::Chars;
+<span class="kw">use </span><span class="kw">super</span>::source_buffer::SourceBuffer;
 
 <span class="attr">#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 </span><span class="kw">pub enum </span>Token {
@@ -936,9 +943,14 @@
     <span class="prelude-val">Ok</span>(result)
 }
 
+<span class="kw">fn </span>is_letter_or_digit(ch: char) -&gt; bool {
+    ch.is_alphanumeric()  || ch == <span class="string">&#39;_&#39;
+</span>}
+
 <span class="doccomment">/// Analyze source code for reserved keyword or name literal
-</span><span class="kw">pub fn </span>is_reserved_keyword_or_name(text: <span class="kw-2">&amp;mut </span>Chars, index: u32) -&gt; <span class="prelude-ty">Option</span>&lt;(Token, u32)&gt; {
+</span><span class="kw">pub fn </span>is_reserved_keyword_or_name(text: <span class="kw-2">&amp;</span>Chars, index: u32) -&gt; <span class="prelude-ty">Option</span>&lt;(Token, u32)&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>buffer = String::new();
+    
     
     <span class="kw">match </span>buffer.as_str() {
         <span class="string">&quot;False&quot;     </span>=&gt; <span class="prelude-val">Some</span>((Token::False(index, index + <span class="number">5</span>), <span class="number">5</span>)),
