@@ -191,6 +191,67 @@ pub fn is_operator_or_delimiter_from_buffer(buffer: &mut SourceBuffer) -> Option
             buffer.next();
             Some(Token::Div(start, buffer.index()))
         },
+        ('*', '*', '=') => {
+            buffer.next_three();
+            Some(Token::PowerAssign(start, buffer.index()))
+        },
+        ('*', '*', _ ) => {
+            buffer.next_two();
+            Some(Token::Power(start, buffer.index()))
+        },
+        ('*', '=', _ ) => {
+            buffer.next_two();
+            Some(Token::MulAssign(start, buffer.index()))
+        },
+        ('*', _ , _ ) => {
+            buffer.next();
+            Some(Token::Mul(start, buffer.index()))
+        },
+        ('<', '<', '=') => {
+            buffer.next_three();
+            Some(Token::ShiftLeftAssign(start, buffer.index()))
+        },
+        ('<', '<', _ ) => {
+            buffer.next_two();
+            Some(Token::ShiftLeft(start, buffer.index()))
+        },
+        ('<', '=', _ ) => {
+            buffer.next_two();
+            Some(Token::LessEqual(start, buffer.index()))
+        },
+        ('<', _ , _ ) => {
+            buffer.next();
+            Some(Token::Less(start, buffer.index()))
+        },
+
+        ('>', '>', '=') => {
+            buffer.next_three();
+            Some(Token::ShiftRightAssign(start, buffer.index()))
+        },
+        ('>', '>', _ ) => {
+            buffer.next_two();
+            Some(Token::ShiftRight(start, buffer.index()))
+        },
+        ('>', '=', _ ) => {
+            buffer.next_two();
+            Some(Token::GreaterEqual(start, buffer.index()))
+        },
+        ('>', _ , _ ) => {
+            buffer.next();
+            Some(Token::Greater(start, buffer.index()))
+        },
+        ('=', '=', _ ) => {
+            buffer.next_two();
+            Some(Token::Equal(start, buffer.index()))
+        },
+        ('!', '=', _ ) => {
+            buffer.next_two();
+            Some(Token::NotEqual(start, buffer.index()))
+        },
+        ('=', _ , _ ) => {
+            buffer.next();
+            Some(Token::Assign(start, buffer.index()))
+        },
         _ => None
     }
 }
@@ -198,22 +259,6 @@ pub fn is_operator_or_delimiter_from_buffer(buffer: &mut SourceBuffer) -> Option
 /// Analyzes source code for operators or delimiters.
 pub fn is_operator_or_delimiter(c1: char, c2: char, c3: char, index: u32) -> Option<(Token, u8)> {
     match (c1, c2, c3) {
-        ('/', '/', '=') => Some((Token::DoubleDivAssign(index, index + 3), 3)),
-        ('/', '/', _ )  => Some((Token::DoubleDiv(index, index + 2), 2)),
-        ('/', '=', _ )  => Some((Token::DivAssign(index, index + 2), 2)),
-        ('/', _ , _ )   => Some((Token::Div(index, index + 1), 1)),
-        ('*', '*', '=') => Some((Token::PowerAssign(index, index + 3), 3)),
-        ('*', '*', _)   => Some((Token::Power(index, index + 2), 2)),
-        ('*', '=', _)   => Some((Token::MulAssign(index, index + 2), 2)),
-        ('*', _ , _)    => Some((Token::Mul(index, index + 1), 1)),
-        ('<', '<', '=') => Some((Token::ShiftLeftAssign(index, index + 3), 3)),
-        ('<', '<', _)   => Some((Token::ShiftLeft(index, index + 2), 2)),
-        ('<', '=', _)   => Some((Token::LessEqual(index, index + 2), 2)),
-        ('<', _ , _)    => Some((Token::Less(index, index + 1), 1)),
-        ('>', '>', '=') => Some((Token::ShiftRightAssign(index, index + 3), 3)),
-        ('>', '>', _)   => Some((Token::ShiftRight(index, index + 2), 2)),
-        ('>', '=', _)   => Some((Token::GreaterEqual(index, index + 2), 2)),
-        ('>', _ , _)    => Some((Token::Greater(index, index + 1), 1)),
         ('+', '=', _)   => Some((Token::PlusAssign(index, index + 2), 2)),
         ('+', _ , _)    => Some((Token::Plus(index, index + 1), 1)),
         ('-', '=', _)   => Some((Token::MinusAssign(index, index + 2), 2)),
@@ -318,11 +363,14 @@ mod tests {
 
     #[test]
     fn operator_or_delimiter_power_assign() {
-        let res = is_operator_or_delimiter('*', '*', '=', 4);
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("**=");
+        
+        let res = is_operator_or_delimiter_from_buffer(&mut buffer);
+        
         match res {
-            Some((x, y)) => {
-                assert_eq!(x, Token::PowerAssign(4, 7));
-                assert_eq!(y, 3);
+            Some(x) => {
+                assert_eq!(x, Token::PowerAssign(0, 3));
             },
             None => assert!(false)
         }
@@ -330,11 +378,14 @@ mod tests {
 
     #[test]
     fn operator_or_delimiter_power() {
-        let res = is_operator_or_delimiter('*', '*', ' ', 4);
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("**");
+        
+        let res = is_operator_or_delimiter_from_buffer(&mut buffer);
+        
         match res {
-            Some((x, y)) => {
-                assert_eq!(x, Token::Power(4, 6));
-                assert_eq!(y, 2);
+            Some(x) => {
+                assert_eq!(x, Token::Power(0, 2));
             },
             None => assert!(false)
         }
@@ -342,11 +393,14 @@ mod tests {
 
     #[test]
     fn operator_or_delimiter_mul_assign() {
-        let res = is_operator_or_delimiter('*', '=', ' ', 4);
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("*=");
+        
+        let res = is_operator_or_delimiter_from_buffer(&mut buffer);
+        
         match res {
-            Some((x, y)) => {
-                assert_eq!(x, Token::MulAssign(4, 6));
-                assert_eq!(y, 2);
+            Some(x) => {
+                assert_eq!(x, Token::MulAssign(0, 2));
             },
             None => assert!(false)
         }
@@ -354,11 +408,14 @@ mod tests {
 
     #[test]
     fn operator_or_delimiter_mul() {
-        let res = is_operator_or_delimiter('*', ' ', ' ', 4);
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("*");
+        
+        let res = is_operator_or_delimiter_from_buffer(&mut buffer);
+        
         match res {
-            Some((x, y)) => {
-                assert_eq!(x, Token::Mul(4, 5));
-                assert_eq!(y, 1);
+            Some(x) => {
+                assert_eq!(x, Token::Mul(0, 1));
             },
             None => assert!(false)
         }
@@ -366,11 +423,14 @@ mod tests {
 
     #[test]
     fn operator_or_delimiter_shift_left_assign() {
-        let res = is_operator_or_delimiter('<', '<', '=', 4);
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("<<=");
+        
+        let res = is_operator_or_delimiter_from_buffer(&mut buffer);
+        
         match res {
-            Some((x, y)) => {
-                assert_eq!(x, Token::ShiftLeftAssign(4, 7));
-                assert_eq!(y, 3);
+            Some(x) => {
+                assert_eq!(x, Token::ShiftLeftAssign(0, 3));
             },
             None => assert!(false)
         }
@@ -378,11 +438,14 @@ mod tests {
 
     #[test]
     fn operator_or_delimiter_shift_left() {
-        let res = is_operator_or_delimiter('<', '<', ' ', 4);
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("<<");
+        
+        let res = is_operator_or_delimiter_from_buffer(&mut buffer);
+        
         match res {
-            Some((x, y)) => {
-                assert_eq!(x, Token::ShiftLeft(4, 6));
-                assert_eq!(y, 2);
+            Some(x) => {
+                assert_eq!(x, Token::ShiftLeft(0, 2));
             },
             None => assert!(false)
         }
@@ -390,11 +453,14 @@ mod tests {
 
     #[test]
     fn operator_or_delimiter_less_equal() {
-        let res = is_operator_or_delimiter('<', '=', ' ', 4);
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("<=");
+        
+        let res = is_operator_or_delimiter_from_buffer(&mut buffer);
+        
         match res {
-            Some((x, y)) => {
-                assert_eq!(x, Token::LessEqual(4, 6));
-                assert_eq!(y, 2);
+            Some(x) => {
+                assert_eq!(x, Token::LessEqual(0, 2));
             },
             None => assert!(false)
         }
@@ -402,11 +468,14 @@ mod tests {
 
     #[test]
     fn operator_or_delimiter_less() {
-        let res = is_operator_or_delimiter('<', ' ', ' ', 4);
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("<");
+        
+        let res = is_operator_or_delimiter_from_buffer(&mut buffer);
+        
         match res {
-            Some((x, y)) => {
-                assert_eq!(x, Token::Less(4, 5));
-                assert_eq!(y, 1);
+            Some(x) => {
+                assert_eq!(x, Token::Less(0, 1));
             },
             None => assert!(false)
         }
@@ -414,11 +483,14 @@ mod tests {
 
     #[test]
     fn operator_or_delimiter_shift_right_assign() {
-        let res = is_operator_or_delimiter('>', '>', '=', 4);
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text(">>=");
+        
+        let res = is_operator_or_delimiter_from_buffer(&mut buffer);
+        
         match res {
-            Some((x, y)) => {
-                assert_eq!(x, Token::ShiftRightAssign(4, 7));
-                assert_eq!(y, 3);
+            Some(x) => {
+                assert_eq!(x, Token::ShiftRightAssign(0, 3));
             },
             None => assert!(false)
         }
@@ -426,11 +498,14 @@ mod tests {
 
     #[test]
     fn operator_or_delimiter_shift_right() {
-        let res = is_operator_or_delimiter('>', '>', ' ', 4);
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text(">>");
+        
+        let res = is_operator_or_delimiter_from_buffer(&mut buffer);
+        
         match res {
-            Some((x, y)) => {
-                assert_eq!(x, Token::ShiftRight(4, 6));
-                assert_eq!(y, 2);
+            Some(x) => {
+                assert_eq!(x, Token::ShiftRight(0, 2));
             },
             None => assert!(false)
         }
@@ -438,11 +513,14 @@ mod tests {
 
     #[test]
     fn operator_or_delimiter_greater_equal() {
-        let res = is_operator_or_delimiter('>', '=', ' ', 4);
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text(">=");
+        
+        let res = is_operator_or_delimiter_from_buffer(&mut buffer);
+        
         match res {
-            Some((x, y)) => {
-                assert_eq!(x, Token::GreaterEqual(4, 6));
-                assert_eq!(y, 2);
+            Some(x) => {
+                assert_eq!(x, Token::GreaterEqual(0, 2));
             },
             None => assert!(false)
         }
@@ -450,11 +528,14 @@ mod tests {
 
     #[test]
     fn operator_or_delimiter_greater() {
-        let res = is_operator_or_delimiter('>', ' ', ' ', 4);
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text(">");
+        
+        let res = is_operator_or_delimiter_from_buffer(&mut buffer);
+        
         match res {
-            Some((x, y)) => {
-                assert_eq!(x, Token::Greater(4, 5));
-                assert_eq!(y, 1);
+            Some(x) => {
+                assert_eq!(x, Token::Greater(0, 1));
             },
             None => assert!(false)
         }
@@ -462,11 +543,14 @@ mod tests {
 
     #[test]
     fn operator_or_delimiter_equal() {
-        let res = is_operator_or_delimiter('=', '=', ' ', 4);
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("==");
+        
+        let res = is_operator_or_delimiter_from_buffer(&mut buffer);
+        
         match res {
-            Some((x, y)) => {
-                assert_eq!(x, Token::Equal(4, 6));
-                assert_eq!(y, 2);
+            Some(x) => {
+                assert_eq!(x, Token::Equal(0, 2));
             },
             None => assert!(false)
         }
@@ -474,11 +558,14 @@ mod tests {
 
     #[test]
     fn operator_or_delimiter_not_equal() {
-        let res = is_operator_or_delimiter('!', '=', ' ', 4);
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("!=");
+        
+        let res = is_operator_or_delimiter_from_buffer(&mut buffer);
+        
         match res {
-            Some((x, y)) => {
-                assert_eq!(x, Token::NotEqual(4, 6));
-                assert_eq!(y, 2);
+            Some(x) => {
+                assert_eq!(x, Token::NotEqual(0, 2));
             },
             None => assert!(false)
         }
@@ -486,11 +573,14 @@ mod tests {
 
     #[test]
     fn operator_or_delimiter_assign() {
-        let res = is_operator_or_delimiter('=', ' ', ' ', 4);
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("=");
+        
+        let res = is_operator_or_delimiter_from_buffer(&mut buffer);
+        
         match res {
-            Some((x, y)) => {
-                assert_eq!(x, Token::Assign(4, 5));
-                assert_eq!(y, 1);
+            Some(x) => {
+                assert_eq!(x, Token::Assign(0, 1));
             },
             None => assert!(false)
         }
