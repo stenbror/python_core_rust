@@ -17,7 +17,8 @@ pub trait SourceBufferMethods {
     fn is_hex_digit(&self) -> bool;
     fn is_binary_digit(&self) -> bool;
     fn length(&self) -> u32;
-    fn slice(&self, start: u32, end: u32) -> String;
+    fn slice(&self, start: u32, end: u32) -> Option<String>;
+    fn splice(&mut self, text: &'static str) -> ();
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -192,9 +193,33 @@ impl SourceBufferMethods for SourceBuffer {
     }
 
     /// Slice out part of source buffer
-    fn slice(&self, start: u32, end: u32) -> String {
-        return String::new();
+    fn slice(&self, start: u32, end: u32) -> Option<String> {
+        let mut res = String::new();
+        let mut index = start;
+        
+        if start >= end || end >= self.length() {
+            return None
+        }
+
+        while index <= end {
+            match self.buffer.get(index as usize) {
+                Some(x) => {
+                    res.push(x.clone());
+                    index = index + 1
+                },
+                _ => return None
+            }
+        }
+
+        return Some(res);
     }
+
+    /// Add more text to buffer at end. Interactive mode support
+    fn splice(&mut self, text: &'static str) -> () {
+        let mut rhs = text.chars().collect::<Vec<char>>();
+        self.buffer.append(&mut rhs);
+    }
+
 }
 
 /// Unittests for Lexical Analyzer module
@@ -210,4 +235,37 @@ mod tests {
 
         assert_eq!(buffer.length(), 27);
     }
+
+    #[test]
+    fn collect_slice_from_buffer() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("for i in range(0, 10): pass");
+
+        match buffer.slice(9,13) {
+            Some(x) => {
+                assert_eq!(x, "range")
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn collect_splice_from_buffer() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("for i in range(0, 10): pass");
+
+        assert_eq!(buffer.length(), 27);
+
+        buffer.splice("\r\npass");
+
+        assert_eq!(buffer.length(), 33);
+
+        match buffer.slice(29,32) {
+            Some(x) => {
+                assert_eq!(x, "pass")
+            },
+            _ => assert!(false)
+        }
+    }
+    
 }
