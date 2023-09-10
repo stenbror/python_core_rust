@@ -1457,4 +1457,184 @@ mod tests {
         }
     }
 
+    #[test]
+    fn reserved_keyword_lambda() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("lambda");
+        
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+        
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Lambda(0, 6));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn reserved_keyword_nonlocal() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("nonlocal");
+        
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+        
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Nonlocal(0, 8));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn reserved_keyword_not() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("not");
+        
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+        
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Not(0, 3));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn reserved_keyword_or() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("or");
+        
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+        
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Or(0, 2));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn reserved_keyword_pass() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("pass");
+        
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+        
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Pass(0, 4));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn reserved_keyword_raise() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("raise");
+        
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+        
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Raise(0, 5));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn reserved_keyword_return() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("return");
+        
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+        
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Return(0, 6));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn reserved_keyword_try() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("try");
+        
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+        
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Try(0, 3));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn reserved_keyword_while() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("while");
+        
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+        
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::While(0, 5));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn reserved_keyword_with() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("with");
+        
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+        
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::With(0, 4));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn reserved_keyword_yield() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("yield");
+        
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+        
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Yield(0, 5));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn reserved_keyword_name() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("__init__");
+        
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+        
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Name(0, 8, "__init__".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
 }
