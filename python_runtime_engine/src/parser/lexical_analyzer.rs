@@ -1,6 +1,6 @@
 
 use std::str::Chars;
-use super::source_buffer::SourceBuffer;
+use super::source_buffer::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Token {
@@ -172,6 +172,30 @@ pub fn is_reserved_keyword_or_name(text: &Chars, index: u32) -> Option<(Token, u
 }
 
 /// Analyzes source code for operators or delimiters.
+pub fn is_operator_or_delimiter_from_buffer(buffer: &mut SourceBuffer) -> Option<Token> {
+    let start = buffer.index();
+    match buffer.peek_three_chars() {
+        ('/', '/', '=') => {
+            buffer.next_three();
+            Some(Token::DoubleDivAssign(start, buffer.index()))
+        },
+        ('/', '/', _ ) => {
+            buffer.next_two();
+            Some(Token::DoubleDiv(start, buffer.index()))
+        },
+        ('/', '=', _ ) => {
+            buffer.next_two();
+            Some(Token::DivAssign(start, buffer.index()))
+        },
+        ('/', _ , _ ) => {
+            buffer.next();
+            Some(Token::Div(start, buffer.index()))
+        },
+        _ => None
+    }
+}
+
+/// Analyzes source code for operators or delimiters.
 pub fn is_operator_or_delimiter(c1: char, c2: char, c3: char, index: u32) -> Option<(Token, u8)> {
     match (c1, c2, c3) {
         ('/', '/', '=') => Some((Token::DoubleDivAssign(index, index + 3), 3)),
@@ -234,11 +258,14 @@ mod tests {
 
     #[test]
     fn operator_or_delimiter_double_div_assign() {
-        let res = is_operator_or_delimiter('/', '/', '=', 4);
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("//=");
+        
+        let res = is_operator_or_delimiter_from_buffer(&mut buffer);
+        
         match res {
-            Some((x, y)) => {
-                assert_eq!(x, Token::DoubleDivAssign(4, 7));
-                assert_eq!(y, 3);
+            Some(x) => {
+                assert_eq!(x, Token::DoubleDivAssign(0, 3));
             },
             None => assert!(false)
         }
@@ -246,11 +273,14 @@ mod tests {
 
     #[test]
     fn operator_or_delimiter_double_div() {
-        let res = is_operator_or_delimiter('/', '/', ' ', 4);
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("//");
+        
+        let res = is_operator_or_delimiter_from_buffer(&mut buffer);
+        
         match res {
-            Some((x, y)) => {
-                assert_eq!(x, Token::DoubleDiv(4, 6));
-                assert_eq!(y, 2);
+            Some(x) => {
+                assert_eq!(x, Token::DoubleDiv(0, 2));
             },
             None => assert!(false)
         }
@@ -258,11 +288,14 @@ mod tests {
 
     #[test]
     fn operator_or_delimiter_div_assign() {
-        let res = is_operator_or_delimiter('/', '=', ' ', 4);
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("/=");
+        
+        let res = is_operator_or_delimiter_from_buffer(&mut buffer);
+        
         match res {
-            Some((x, y)) => {
-                assert_eq!(x, Token::DivAssign(4, 6));
-                assert_eq!(y, 2);
+            Some(x) => {
+                assert_eq!(x, Token::DivAssign(0, 2));
             },
             None => assert!(false)
         }
@@ -270,11 +303,14 @@ mod tests {
 
     #[test]
     fn operator_or_delimiter_div() {
-        let res = is_operator_or_delimiter('/', ' ', ' ', 4);
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("/");
+        
+        let res = is_operator_or_delimiter_from_buffer(&mut buffer);
+        
         match res {
-            Some((x, y)) => {
-                assert_eq!(x, Token::Div(4, 5));
-                assert_eq!(y, 1);
+            Some(x) => {
+                assert_eq!(x, Token::Div(0, 1));
             },
             None => assert!(false)
         }
