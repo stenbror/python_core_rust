@@ -106,6 +106,11 @@ pub fn is_string_from_buffer( buffer: &mut SourceBuffer,
     None
 }
 
+// Handling all forms of numbers in source buffer.
+pub fn is_number_from_buffer(buffer: &mut SourceBuffer) -> Option<Token> {
+    None
+}
+
 /// Analyze source code for reserved keyword or name literal
 pub fn is_reserved_keyword_or_name_from_buffer(buffer: &mut SourceBuffer) -> Option<Token> {
     let start = buffer.index();
@@ -352,6 +357,14 @@ pub fn is_operator_or_delimiter_from_buffer(buffer: &mut SourceBuffer) -> Option
             None
         },
         ('.', _ , _ ) => {
+            let res = buffer.peek_three_chars();
+                
+            match res {
+                ( '.', '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9', _ ) 
+                    => return is_number_from_buffer(buffer),
+                _ => ()
+            } 
+
             buffer.next();
             Some(Token::Dot(start, buffer.index()))
         },
