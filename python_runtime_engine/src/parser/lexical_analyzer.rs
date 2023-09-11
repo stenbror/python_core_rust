@@ -1,6 +1,6 @@
-
 use super::source_buffer::*;
 
+/// Token types that parser is operating on from source buffer.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Token {
     Eof(u32),
@@ -97,7 +97,7 @@ pub enum Token {
     Number(u32, u32, String)
 }
 
-/// Handling all forms for strings in Python from source buffer.
+/// Analyze source code for strings.
 pub fn is_string_from_buffer( buffer: &mut SourceBuffer, 
                               start: u32,
                               is_raw: bool,
@@ -106,7 +106,7 @@ pub fn is_string_from_buffer( buffer: &mut SourceBuffer,
     None
 }
 
-// Handling all forms of numbers in source buffer.
+/// Analyze source code for numbers.
 pub fn is_number_from_buffer(buffer: &mut SourceBuffer) -> Option<Token> {
     None
 }
@@ -196,7 +196,7 @@ pub fn is_reserved_keyword_or_name_from_buffer(buffer: &mut SourceBuffer) -> Opt
     None
 }
 
-/// Analyzes source code for operators or delimiters.
+/// Analyze source code for operators or delimiters.
 pub fn is_operator_or_delimiter_from_buffer(buffer: &mut SourceBuffer) -> Option<Token> {
     let start = buffer.index();
     match buffer.peek_three_chars() {
@@ -402,6 +402,13 @@ pub fn is_operator_or_delimiter_from_buffer(buffer: &mut SourceBuffer) -> Option
         },
         _ => None
     }
+}
+
+/// Tokenize a source buffer for parsing
+pub fn tokenize_from_buffer(buffer: &mut SourceBuffer) -> Option<Vec<Token>> {
+    let tokens = Vec::<Token>::new();
+
+    Some(tokens)
 }
 
 /// Unittests for Lexical Analyzer module
