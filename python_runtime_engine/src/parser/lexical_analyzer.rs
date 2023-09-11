@@ -97,6 +97,15 @@ pub enum Token {
     Number(u32, u32, String)
 }
 
+/// Handling all forms for strings in Python from source buffer.
+pub fn is_string_from_buffer( buffer: &mut SourceBuffer, 
+                              start: u32,
+                              is_raw: bool,
+                              is_unicode: bool,
+                              is_format: bool) -> Option<Token> {
+    None
+}
+
 /// Analyze source code for reserved keyword or name literal
 pub fn is_reserved_keyword_or_name_from_buffer(buffer: &mut SourceBuffer) -> Option<Token> {
     let start = buffer.index();
@@ -146,7 +155,33 @@ pub fn is_reserved_keyword_or_name_from_buffer(buffer: &mut SourceBuffer) -> Opt
                     "while"     =>  return Some(Token::While(start, buffer.index())),
                     "with"      =>  return Some(Token::With(start, buffer.index())),
                     "yield"     =>  return Some(Token::Yield(start, buffer.index())),
-
+                    
+                    "r" | "u" | "R" | "U" | "f" | "F" | "fr" | "Fr" | "fR" | "FR" | "rf" | "rF" | "Rf" | "RF" => {
+                        if buffer.peek_char() == '"' || buffer.peek_char() == '\'' {
+                            let mut is_raw: bool = false;
+                            let mut is_unicode: bool = false;
+                            let mut is_format: bool = false;
+                            
+                            match text.as_str() {
+                                "r" | "R" => {
+                                    is_raw = true;
+                                },
+                                "u" | "U" => {
+                                    is_unicode = true;
+                                },
+                                "f" | "F" => {
+                                    is_format = true;
+                                },
+                                _ => {
+                                    is_raw = true; 
+                                    is_format = true;
+                                }
+                            }
+                            
+                            return is_string_from_buffer(buffer, start, is_raw, is_unicode, is_format);
+                        }
+                        return Some(Token::Name(start, buffer.index(), text))
+                    }
                     _   => return Some(Token::Name(start, buffer.index(), text))
                 }
             },
