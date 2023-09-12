@@ -104,7 +104,15 @@ pub fn is_string_from_buffer( buffer: &mut SourceBuffer,
                               is_raw: bool,
                               is_unicode: bool,
                               is_format: bool) -> Option<Token> {
-    None
+    
+    let element = buffer.slice(start, buffer.index() - 1);
+
+    match element {
+        Some(text)  => {
+            Some(Token::String(start, buffer.index(), text, is_raw, is_unicode, is_format))
+        },
+        _ => None
+    }
 }
 
 /// Analyze source code for numbers.
