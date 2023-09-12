@@ -3,6 +3,7 @@ use super::source_buffer::*;
 /// Token types that parser is operating on from source buffer.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Token {
+    Error(u32, String),
     Eof(u32),
     Newline(u32, u32, char, char),
     Indent(u32),
@@ -108,7 +109,18 @@ pub fn is_string_from_buffer( buffer: &mut SourceBuffer,
 
 /// Analyze source code for numbers.
 pub fn is_number_from_buffer(buffer: &mut SourceBuffer) -> Option<Token> {
-    None
+    let start = buffer.index();
+
+    // Handle numbers
+
+    let element = buffer.slice(start, buffer.index() - 1);
+
+    match element {
+        Some(text)  => {
+            Some(Token::Number(start, buffer.index(), text))
+        },
+        _ => None
+    }
 }
 
 /// Analyze source code for reserved keyword or name literal
@@ -354,7 +366,7 @@ pub fn is_operator_or_delimiter_from_buffer(buffer: &mut SourceBuffer) -> Option
             Some(Token::Elipsis(start, buffer.index()))
         },
         ('.', '.', _ ) => {
-            None
+            Some(Token::Error(buffer.index(), "Expecting single '.' or tripple '...', found '..'".to_string()))
         },
         ('.', _ , _ ) => {
             let res = buffer.peek_three_chars();
@@ -405,10 +417,10 @@ pub fn is_operator_or_delimiter_from_buffer(buffer: &mut SourceBuffer) -> Option
 }
 
 /// Tokenize a source buffer for parsing
-pub fn tokenize_from_buffer(buffer: &mut SourceBuffer) -> Option<Vec<Token>> {
+pub fn tokenize_from_buffer(buffer: &mut SourceBuffer) -> Result<Vec<Token>, Token> {
     let tokens = Vec::<Token>::new();
 
-    Some(tokens)
+    Ok(tokens)
 }
 
 /// Unittests for Lexical Analyzer module
