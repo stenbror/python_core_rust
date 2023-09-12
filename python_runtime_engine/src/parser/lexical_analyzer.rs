@@ -277,6 +277,78 @@ pub fn is_number_from_buffer(buffer: &mut SourceBuffer) -> Option<Token> {
         },
         '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '.' => {
 
+            if buffer.peek_char() != '.' {
+                loop {
+                    loop {
+                        buffer.next();
+                        if !buffer.is_digit() {
+                            break
+                        }
+                    }
+                    if buffer.peek_char() != '_' {
+                        break
+                    }
+                    buffer.next();
+                    if !buffer.is_digit() {
+                        return Some(Token::Error(buffer.index(), "Expecting digit after '_' in Number!".to_string()))
+                    }
+                }
+            }
+
+            if buffer.peek_char() == '.' {
+                buffer.next();
+                loop {
+                    while buffer.is_digit() {
+                        buffer.next()
+                    }
+                    if buffer.peek_char() != '_' {
+                        break
+                    }
+                    buffer.next();
+                    if !buffer.is_digit() {
+                        return Some(Token::Error(buffer.index(), "Expecting digit after '_' in Number!".to_string()))
+                    }
+                }
+            }
+
+            match buffer.peek_char() { // Handling exponent
+                'e' | 'E' => {
+                    buffer.next();
+                    match buffer.peek_char() {
+                        '+' | '-' => {
+                            buffer.next();
+                            if !buffer.is_digit() {
+                                return Some(Token::Error(buffer.index(), "Expecting digit after '+' or '-' in exponent!".to_string()))
+                            }
+                        },
+                        _ => ()
+                    }
+                    if !buffer.is_digit() {
+                        return Some(Token::Error(buffer.index(), "Expecting digits in exponent!".to_string()))
+                    }
+                    loop {
+                        while buffer.is_digit() {
+                            buffer.next()
+                        }
+                        if buffer.peek_char() != '_' {
+                            break
+                        }
+                        buffer.next();
+                        if !buffer.is_digit() {
+                            return Some(Token::Error(buffer.index(), "Missing digit after '_' in number!".to_string()))
+                        }
+                    }
+
+                },
+                _ => ()
+            }
+
+            match buffer.peek_char() { // Imaginary number
+                'j' | 'J' => {
+                    buffer.next()
+                },
+                _ => ()
+            }
         },
         _ => return None
     }
