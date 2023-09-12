@@ -120,6 +120,166 @@ pub fn is_number_from_buffer(buffer: &mut SourceBuffer) -> Option<Token> {
     let start = buffer.index();
 
     // Handle numbers
+    match buffer.peek_char() {
+        '0' => {
+            buffer.next();
+            match buffer.peek_char() {
+                'b' | 'B' => {
+                    buffer.next();
+                    loop {
+                        if buffer.peek_char() == '_' {
+                            buffer.next()
+                        }
+                        if !buffer.is_binary_digit() {
+                            return Some(Token::Error(buffer.index(), "Expecting '0' or '1' only in binary number!".to_string()))
+                        }
+                        loop {
+                            buffer.next();
+                            if !buffer.is_binary_digit() {
+                                break
+                            }
+                        }
+                        if buffer.peek_char() != '_' {
+                            break
+                        }
+                    }
+                    if buffer.is_digit() {
+                        return Some(Token::Error(buffer.index(), "Expecting only '0' or '1' in binary number!".to_string()))
+                    }
+                },
+                'o' | 'O' => {
+                    buffer.next();
+                    loop {
+                        if buffer.peek_char() == '_' {
+                            buffer.next()
+                        }
+                        if !buffer.is_octet_digit() {
+                            return Some(Token::Error(buffer.index(), "Expecting '0' .. '7' only in octet number!".to_string()))
+                        }
+                        loop {
+                            buffer.next();
+                            if !buffer.is_octet_digit() {
+                                break
+                            }
+                        }
+                        if buffer.peek_char() != '_' {
+                            break
+                        }
+                    }
+                    if buffer.is_digit() {
+                        return Some(Token::Error(buffer.index(), "Expecting only '0' .. '7' in octet number!".to_string()))
+                    }
+                },
+                'x' | 'X' => {
+                    buffer.next();
+                    loop {
+                        if buffer.peek_char() == '_' {
+                            buffer.next()
+                        }
+                        if !buffer.is_hex_digit() {
+                            return Some(Token::Error(buffer.index(), "Expecting '0' .. '9', 'a' .. 'f' or 'A' .. 'F' only in hexadecimal number!".to_string()))
+                        }
+                        loop {
+                            buffer.next();
+                            if !buffer.is_hex_digit() {
+                                break
+                            }
+                        }
+                        if buffer.peek_char() != '_' {
+                            break
+                        }
+                    }
+                },
+                _ => {
+                    let mut nonzero = false;
+
+                    if buffer.peek_char() != '.' {
+                        loop {
+                            loop {
+                                if buffer.is_digit() && buffer.peek_char() != '0' {
+                                    nonzero = true
+                                }
+                                buffer.next();
+                                if !buffer.is_digit() {
+                                    break
+                                }
+                            }
+                            if buffer.peek_char() != '_' {
+                                break
+                            }
+                            buffer.next();
+                            if !buffer.is_digit() {
+                                return Some(Token::Error(buffer.index(), "Expecting digit after '_' in Number!".to_string()))
+                            }
+                        }
+                    }
+
+                    if buffer.peek_char() == '.' {
+                        buffer.next();
+                        loop {
+                            while buffer.is_digit() {
+                                buffer.next()
+                            }
+                            if buffer.peek_char() != '_' {
+                                break
+                            }
+                            buffer.next();
+                            if !buffer.is_digit() {
+                                return Some(Token::Error(buffer.index(), "Expecting digit after '_' in Number!".to_string()))
+                            }
+                        }
+                    }
+
+                    match buffer.peek_char() { // Handling exponent
+                        'e' | 'E' => {
+                            buffer.next();
+                            match buffer.peek_char() {
+                                '+' | '-' => {
+                                    buffer.next();
+                                    if !buffer.is_digit() {
+                                        return Some(Token::Error(buffer.index(), "Expecting digit after '+' or '-' in exponent!".to_string()))
+                                    }
+                                },
+                                _ => ()
+                            }
+                            if !buffer.is_digit() {
+                                return Some(Token::Error(buffer.index(), "Expecting digits in exponent!".to_string()))
+                            }
+                            loop {
+                                while buffer.is_digit() {
+                                    buffer.next()
+                                }
+                                if buffer.peek_char() != '_' {
+                                    break
+                                }
+                                buffer.next();
+                                if !buffer.is_digit() {
+                                    return Some(Token::Error(buffer.index(), "Missing digit after '_' in number!".to_string()))
+                                }
+                            }
+
+                        },
+                        _ => ()
+                    }
+
+                    match buffer.peek_char() { // Imaginary number
+                        'j' | 'J' => {
+                            buffer.next()
+                        },
+                        _ => ()
+                    }
+
+                    if nonzero {
+                        return Some(Token::Error(buffer.index(), "Nonzero digit in number starting with zero!".to_string()))
+                    }
+                }
+            }
+        },
+        '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '.' => {
+
+        },
+        _ => return None
+    }
 
     let element = buffer.slice(start, buffer.index() - 1);
 
