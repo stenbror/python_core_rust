@@ -94,7 +94,7 @@ pub enum Token {
     Assign(u32, u32),
 
     Name(u32, u32, String),
-    String(u32, u32, Box<Vec<Box<String>>>),
+    String(u32, u32, String, bool, bool, bool),
     Number(u32, u32, String)
 }
 
@@ -1142,10 +1142,16 @@ mod tests {
         let res = is_operator_or_delimiter_from_buffer(&mut buffer);
         
         match res {
-            Some(_) => {
-                assert!(false)
+            Some(x) => {
+                match x {
+                    Token::Error( a , b ) => {
+                        assert_eq!(a, 0);
+                        assert_eq!(b, "Expecting single '.' or tripple '...', found '..'".to_string())
+                    },
+                    _ => assert!(false)
+                }
             },
-            None => assert!(true)
+            None => assert!(false)
         }
     }
 
