@@ -1995,4 +1995,127 @@ mod tests {
         }
     }
 
+    #[test]
+    fn handle_number_zero_dot_zero_with_exponent_1() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("0.0e37");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 6, "0.0e37".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_zero_dot_zero_with_exponent_2() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("0.0e-37");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 7, "0.0e-37".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_zero_dot_zero_with_exponent_3() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("0.0e+37");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 7, "0.0e+37".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_zero_dot_zero_with_exponent_4() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("0.0e-37j");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 8, "0.0e-37j".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_zero_dot_zero_with_exponent_5() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("0.6787e-37j");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 11, "0.6787e-37j".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_binary_digits_1() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("0b101");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 5, "0b101".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_binary_digits_2() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("0B101");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 5, "0B101".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_binary_digits_limits_higher() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("0B12");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(Token::Error(col, text)) => {
+                assert_eq!(col, 3);
+                assert_eq!(text, "Expecting only '0' or '1' in binary number!".to_string())
+            },
+            _ => assert!(false)
+        }
+    }
+
+
+
 }
