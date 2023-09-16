@@ -1950,4 +1950,49 @@ mod tests {
         }
     }
 
+    #[test]
+    fn handle_number_zero_dot_zero() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("0.0");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 3, "0.0".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_zero_dot_zero_j() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("0.0j");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 4, "0.0j".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_zero_dot_zero_capital_j() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("0.0J");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 4, "0.0J".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
 }
