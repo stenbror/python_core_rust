@@ -2253,6 +2253,154 @@ mod tests {
         }
     }
 
+    #[test]
+    fn handle_number_single_nonzero_digit() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("1");
 
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 1, "1".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_integer() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("1234567890");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 10, "1234567890".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_integer_imaginary_low() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("1j");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 2, "1j".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_integer_imaginary_high() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("1J");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 2, "1J".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_float_simple() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("1.0");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 3, "1.0".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_float_simple_exponent_low_1() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("1.0e4");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 5, "1.0e4".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_float_simple_exponent_low_2() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("1.0e-4");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 6, "1.0e-4".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_float_simple_exponent_low_3() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("1.0e+4");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 6, "1.0e+4".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_float_simple_exponent_low_4() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("1.0E-4");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 6, "1.0E-4".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_float_simple_exponent_low_5() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("1.0E-4j");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 7, "1.0E-4j".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
 
 }
