@@ -2116,6 +2116,112 @@ mod tests {
         }
     }
 
+    #[test]
+    fn handle_number_octet_digits_limits_higher() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("0o78");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(Token::Error(col, text)) => {
+                assert_eq!(col, 3);
+                assert_eq!(text, "Expecting only '0' .. '7' in octet number!".to_string())
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_octet_digits_1() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("0o76");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 4, "0o76".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_octet_digits_2() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("0O76");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 4, "0O76".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_hexadecimal_digits_1() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("0x00");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 4, "0x00".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_hexadecimal_digits_2() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("0X00");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 4, "0X00".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_hexadecimal_digits_3() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("0xaf");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 4, "0xaf".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_hexadecimal_digits_4() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("0Xaf");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 4, "0Xaf".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
 
 
 }
