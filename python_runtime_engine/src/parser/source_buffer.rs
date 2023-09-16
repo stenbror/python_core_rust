@@ -197,7 +197,7 @@ impl SourceBufferMethods for SourceBuffer {
         let mut res = String::new();
         let mut index = start;
         
-        if start >= end || end >= self.length() {
+        if start > end || end >= self.length() {
             return None
         }
 

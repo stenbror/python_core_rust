@@ -352,7 +352,7 @@ pub fn is_number_from_buffer(buffer: &mut SourceBuffer) -> Option<Token> {
         },
         _ => return None
     }
-
+    
     let element = buffer.slice(start, buffer.index() - 1);
 
     match element {
@@ -2217,6 +2217,37 @@ mod tests {
         match res {
             Some(x) => {
                 assert_eq!(x, Token::Number(0, 4, "0Xaf".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_nonzero_errors() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("007");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(Token::Error(x, y)) => {
+                assert_eq!(x, 3);
+                assert_eq!(y, "Nonzero digit in number starting with zero!".to_string())
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_single_zero_digit() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("0");
+
+        let res = is_number_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Number(0, 1, "0".to_string()));
             },
             None => assert!(false)
         }
