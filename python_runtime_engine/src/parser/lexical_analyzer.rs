@@ -741,9 +741,57 @@ pub fn is_operator_or_delimiter_from_buffer(buffer: &mut SourceBuffer) -> Option
     }
 }
 
+/// Get the next token symbol from stream
+pub fn advance(buffer: &mut SourceBuffer, stack: &mut Vec<char>) -> Result<Token, Token> {
+    loop {
+
+        // Handle operator or delimiter or special cases like '(', '['. '{', ')', ']', '}' or '.' digit(s)
+        let operator_or_delimiter = is_operator_or_delimiter_from_buffer(buffer);
+        match  operator_or_delimiter {
+            Some(Token::Error( a , b )) => {
+                return Err(Token::Error(a, b))
+            },
+            Some(symbol) => {
+                match symbol {
+                    Token::LeftParen( _ , _ ) => {
+                        stack.push('(')
+                    },
+                    Token::LeftBracket( _ , _ ) => {
+                        stack.push('[')
+                    },
+                    Token::LeftCurly( _ , _ ) => {
+                        stack.push('{')
+                    },
+                    Token::RightParen( _ , _ ) => {
+                        if stack.is_empty() || stack.pop() != Some('(') {
+                            return Err(Token::Error(buffer.index(), "')' does not match '('".to_string()))
+                        }
+                    },
+                    Token::RightBracket( _ , _ ) => {
+                        if stack.is_empty() || stack.pop() != Some('[') {
+                            return Err(Token::Error(buffer.index(), "']' does not match '['".to_string()))
+                        }
+                    },
+                    Token::RightCurly( _ , _ ) => {
+                        if stack.is_empty() || stack.pop() != Some('{') {
+                            return Err(Token::Error(buffer.index(), "'}' does not match '{'".to_string()))
+                        }
+                    },
+                    _ => ()
+                }
+                return Ok(symbol)
+            }
+            _ => {
+                return Err(Token::Error(buffer.index(), "Unexpected character found in sourcecode!".to_string()))
+            }
+        }
+    }
+}
+
 /// Tokenize a source buffer for parsing
 pub fn tokenize_from_buffer(buffer: &mut SourceBuffer) -> Result<Vec<Token>, Token> {
-    let tokens = Vec::<Token>::new();
+    let mut tokens : Vec<Token> = Vec::<Token>::new();
+    let mut stack : Vec<char> = Vec::<char>::new();
 
     Ok(tokens)
 }
