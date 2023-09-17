@@ -143,7 +143,51 @@ pub fn is_string_from_buffer( buffer: &mut SourceBuffer,
 
     if !is_empty_string {
         // Handle string content and closing quote.
-
+        loop {
+            match buffer.peek_three_chars() {
+                ('"', '"', '"') => {
+                    if is_triple && is_double_quote {
+                        buffer.next_three();
+                        break
+                    }
+                    buffer.next()
+                },
+                ('\'', '\'', '\'') => {
+                    if is_triple && !is_double_quote {
+                        buffer.next_three();
+                        break
+                    }
+                    buffer.next()
+                },
+                ('"', _ , _) => {
+                    if !is_triple && is_double_quote {
+                        buffer.next();
+                        break
+                    }
+                    buffer.next()
+                },
+                ('\'', _ , _) => {
+                    if !is_triple && !is_double_quote {
+                        buffer.next();
+                        break
+                    }
+                    buffer.next()
+                },
+                ('\r', _ , _) |
+                ('\n', _ , _) => {
+                    if !is_triple {
+                        return Some(Token::Error(buffer.index(), "Line shift inside single quote not allowed!".to_string()))
+                    }
+                    buffer.next()
+                },
+                ('\0', _ , _) => {
+                    return Some(Token::Error(buffer.index(), "End of file inside string!".to_string()))
+                }
+                _ => {
+                    buffer.next()
+                }
+            }
+        }
     }
 
     let element = buffer.slice(start, buffer.index() - 1);
@@ -2638,7 +2682,7 @@ mod tests {
             None => assert!(false)
         }
     }
-    
+
     #[test]
     fn handle_string_empty_double_quote_with_format_raw_5() {
         let mut buffer = SourceBuffer::new();
