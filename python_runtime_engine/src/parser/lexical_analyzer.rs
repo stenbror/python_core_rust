@@ -104,7 +104,48 @@ pub fn is_string_from_buffer( buffer: &mut SourceBuffer,
                               is_raw: bool,
                               is_unicode: bool,
                               is_format: bool) -> Option<Token> {
-    
+
+    let mut is_triple = false;
+    let mut is_double_quote = false;
+    let mut is_empty_string = false;
+
+    // Handle start of string and analyze for single, triple or empty string
+    match buffer.peek_three_chars() {
+        ('"', '"', '"') => {
+            buffer.next_three();
+            is_triple = true; is_double_quote = true
+        },
+        ('"', '"', _) => {
+            buffer.next();
+            buffer.next();
+            is_empty_string = true; is_double_quote = true
+        },
+        ('"', _ , _) => {
+            buffer.next();
+            is_double_quote = true
+        },
+
+        ('\'', '\'', '\'') => {
+            buffer.next_three();
+            is_triple = true; is_double_quote = false
+        },
+        ('\'', '\'', _) => {
+            buffer.next();
+            buffer.next();
+            is_empty_string = true; is_double_quote = false
+        },
+        ('\'', _ , _) => {
+            buffer.next();
+            is_double_quote = false
+        },
+        _ => return None
+    }
+
+    if !is_empty_string {
+        // Handle string content and closing quote.
+        
+    }
+
     let element = buffer.slice(start, buffer.index() - 1);
 
     match element {
