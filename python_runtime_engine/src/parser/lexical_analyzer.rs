@@ -180,10 +180,10 @@ pub fn is_string_from_buffer( buffer: &mut SourceBuffer,
                     }
                     buffer.next()
                 },
-                ('\0', _ , _) => {
-                    return Some(Token::Error(buffer.index(), "End of file inside string!".to_string()))
-                }
                 _ => {
+                    if buffer.is_end_of_file() {
+                        return Some(Token::Error(buffer.index(), "End of file inside string!".to_string()))
+                    }
                     buffer.next()
                 }
             }
@@ -2743,4 +2743,183 @@ mod tests {
         }
     }
 
+    #[test]
+    fn handle_string_triple_double_with_single_quote() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("\"\"\"This is a 'test' for you! \"\"\"");
+
+        let res = is_string_from_buffer(&mut buffer, 0, false, false, false);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::String(0, 32, "\"\"\"This is a 'test' for you! \"\"\"".to_string(), false, false, false));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_string_triple_single_with_double_quote() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("'''This is a \"test\" for you! '''");
+
+        let res = is_string_from_buffer(&mut buffer, 0, false, false, false);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::String(0, 32, "'''This is a \"test\" for you! '''".to_string(), false, false, false));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_string_triple_double_empty() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("\"\"\"\"\"\"");
+
+        let res = is_string_from_buffer(&mut buffer, 0, false, false, false);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::String(0, 6, "\"\"\"\"\"\"".to_string(), false, false, false));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_string_triple_single_empty() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("''''''");
+
+        let res = is_string_from_buffer(&mut buffer, 0, false, false, false);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::String(0, 6, "''''''".to_string(), false, false, false));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_string_double_empty() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("\"\"");
+
+        let res = is_string_from_buffer(&mut buffer, 0, false, false, false);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::String(0, 2, "\"\"".to_string(), false, false, false));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_string_single_empty() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("''");
+
+        let res = is_string_from_buffer(&mut buffer, 0, false, false, false);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::String(0, 2, "''".to_string(), false, false, false));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_string_double_data() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("\"Hello, World!\"");
+
+        let res = is_string_from_buffer(&mut buffer, 0, false, false, false);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::String(0, 15, "\"Hello, World!\"".to_string(), false, false, false));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_string_single_data() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("'Hello, World!'");
+
+        let res = is_string_from_buffer(&mut buffer, 0, false, false, false);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::String(0, 15, "'Hello, World!'".to_string(), false, false, false));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_string_triple_data_with_newline() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("'''Hello, World!\r\nYes!'''");
+
+        let res = is_string_from_buffer(&mut buffer, 0, false, false, false);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::String(0, 25, "'''Hello, World!\r\nYes!'''".to_string(), false, false, false));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_string_triple_data_with_double_quote() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("'''''Hello, World!\r\nYes!'''");
+
+        let res = is_string_from_buffer(&mut buffer, 0, false, false, false);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::String(0, 27, "'''''Hello, World!\r\nYes!'''".to_string(), false, false, false));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_string_single_data_with_newline_error() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("'Hello, World!\r\nYes!'");
+
+        let res = is_string_from_buffer(&mut buffer, 0, false, false, false);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Error(14, "Line shift inside single quote not allowed!".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_string_single_data_with_end_of_file_error() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("'Hello, World!Yes!");
+
+        let res = is_string_from_buffer(&mut buffer, 0, false, false, false);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::Error(18, "End of file inside string!".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
 }
