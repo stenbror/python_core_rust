@@ -745,6 +745,85 @@ pub fn is_operator_or_delimiter_from_buffer(buffer: &mut SourceBuffer) -> Option
 pub fn advance(buffer: &mut SourceBuffer, stack: &mut Vec<char>) -> Result<Token, Token> {
     loop {
 
+        match buffer.peek_char() {
+            ' ' | '\t' => {
+                buffer.next();
+                continue
+            },
+            '#' => {
+                // Handle comment or type comment here!
+            },
+            '\r' | '\n' => {
+                match buffer.peek_three_chars() {
+                    ( '\r', '\n', _ ) => {
+                        buffer.next();
+                        buffer.next();
+                        continue
+                    },
+                    ( '\r', _ , _ ) | ( '\n', _ , _ ) => {
+                        buffer.next();
+                        continue
+                    }
+                    _ => ()
+                }
+            },
+            '\\' => {
+              match buffer.peek_three_chars() {
+                  ( '\\', '\r', '\n') => {
+                      buffer.next_three();
+                      continue
+                  },
+                  ( '\\', '\r', _ ) | ( '\\', '\n', _ ) => {
+                      buffer.next();
+                      buffer.next();
+                      continue
+                  },
+                  _ => return Err(Token::Error(buffer.index(), "Newline should follow line continuation character '\\'".to_string()))
+              }
+            },
+            _ => {
+                if buffer.is_end_of_file() {
+                    return Ok(Token::Eof(buffer.index()))
+                }
+            }
+        }
+
+        // Handle reserved keywords or literal name or prefixed strings.
+        let reserved_keywords_or_literal = is_operator_or_delimiter_from_buffer(buffer);
+        match reserved_keywords_or_literal {
+            Some(Token::Error( a , b )) => {
+                return Err(Token::Error(a, b))
+            },
+            Some(symbol) => {
+                return Ok(symbol)
+            },
+            _ => ()
+        }
+
+        // Handle numbers except for those starting with a dot.
+        let number_literal = is_number_from_buffer(buffer);
+        match number_literal {
+            Some(Token::Error( a , b )) => {
+                return Err(Token::Error(a, b))
+            },
+            Some(symbol) => {
+                return Ok(symbol)
+            },
+            _ => ()
+        }
+
+        // Handle strings except those starting with prefix.
+        let string_literal = is_string_from_buffer(buffer, buffer.index(), false, false, false);
+        match string_literal {
+            Some(Token::Error( a , b )) => {
+                return Err(Token::Error(a, b))
+            },
+            Some(symbol) => {
+                return Ok(symbol)
+            },
+            _ => ()
+        }
+
         // Handle operator or delimiter or special cases like '(', '['. '{', ')', ']', '}' or '.' digit(s)
         let operator_or_delimiter = is_operator_or_delimiter_from_buffer(buffer);
         match  operator_or_delimiter {
