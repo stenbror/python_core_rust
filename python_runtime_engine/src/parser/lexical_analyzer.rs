@@ -143,7 +143,7 @@ pub fn is_string_from_buffer( buffer: &mut SourceBuffer,
 
     if !is_empty_string {
         // Handle string content and closing quote.
-        
+
     }
 
     let element = buffer.slice(start, buffer.index() - 1);
@@ -2439,6 +2439,126 @@ mod tests {
         match res {
             Some(x) => {
                 assert_eq!(x, Token::Number(0, 7, "1.0E-4j".to_string()));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_string_empty_single_quote() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("''");
+
+        let res = is_string_from_buffer(&mut buffer, 0, false, false, false);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::String(0, 2, "''".to_string(), false, false, false));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_string_empty_double_quote() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("\"\"");
+
+        let res = is_string_from_buffer(&mut buffer, 0, false, false, false);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::String(0, 2, "\"\"".to_string(), false, false, false));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_string_empty_double_quote_with_raw_low() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("r\"\"");
+
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::String(0, 3, "r\"\"".to_string(), true, false, false));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_string_empty_double_quote_with_raw_high() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("R\"\"");
+
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::String(0, 3, "R\"\"".to_string(), true, false, false));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_string_empty_double_quote_with_unicode_low() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("u\"\"");
+
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::String(0, 3, "u\"\"".to_string(), false, true, false));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_string_empty_double_quote_with_unicode_high() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("U\"\"");
+
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::String(0, 3, "U\"\"".to_string(), false, true, false));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_string_empty_double_quote_with_format_low() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("f\"\"");
+
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::String(0, 3, "f\"\"".to_string(), false, false, true));
+            },
+            None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_string_empty_double_quote_with_format_high() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("F\"\"");
+
+        let res = is_reserved_keyword_or_name_from_buffer(&mut buffer);
+
+        match res {
+            Some(x) => {
+                assert_eq!(x, Token::String(0, 3, "F\"\"".to_string(), false, false, true));
             },
             None => assert!(false)
         }
