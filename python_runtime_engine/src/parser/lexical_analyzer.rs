@@ -908,6 +908,34 @@ pub fn advance(buffer: &mut SourceBuffer, stack: &mut Vec<char>) -> Result<Token
 pub fn tokenize_from_buffer(buffer: &mut SourceBuffer) -> Result<Vec<Token>, Token> {
     let mut tokens : Vec<Token> = Vec::<Token>::new();
     let mut stack : Vec<char> = Vec::<char>::new();
+    let mut at_beginning_of_line: bool = true;
+    let mut indent_stack : Vec<u32> = Vec::new();
+    let mut pending : i8 = 0;
+
+    loop {
+
+
+
+
+
+        let symbol = advance(buffer, &mut stack);
+
+        match symbol {
+            Ok(x) => {
+                match x {
+                    Token::Eof( _ ) => {
+                        tokens.push(x);
+                        break;
+                    },
+                    _ => tokens.push(x)
+                }
+            },
+            Err(x) => {
+                return Err(x)
+            }
+            _ => break
+        }
+    }
 
     Ok(tokens)
 }
