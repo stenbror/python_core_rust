@@ -84,7 +84,7 @@ pub enum Token {
     SemiColon(u32, u32),
     Comma(u32, u32),
     Dot(u32, u32),
-    Elipsis(u32, u32),
+    Ellipsis(u32, u32),
     LeftParen(u32, u32),
     RightParen(u32, u32),
     LeftBracket(u32, u32),
@@ -95,7 +95,9 @@ pub enum Token {
 
     Name(u32, u32, String),
     String(u32, u32, String, bool, bool, bool),
-    Number(u32, u32, String)
+    Number(u32, u32, String),
+
+    TypeComment(u32, u32, String)
 }
 
 /// Analyze source code for strings.
@@ -688,7 +690,7 @@ pub fn is_operator_or_delimiter_from_buffer(buffer: &mut SourceBuffer) -> Option
         },
         ('.', '.', '.') => {
             buffer.next_three();
-            Some(Token::Elipsis(start, buffer.index()))
+            Some(Token::Ellipsis(start, buffer.index()))
         },
         ('.', '.', _ ) => {
             Some(Token::Error(buffer.index(), "Expecting single '.' or tripple '...', found '..'".to_string()))
@@ -744,6 +746,7 @@ pub fn is_operator_or_delimiter_from_buffer(buffer: &mut SourceBuffer) -> Option
 /// Get the next token symbol from stream
 pub fn advance(buffer: &mut SourceBuffer, stack: &mut Vec<char>) -> Result<Token, Token> {
     loop {
+        let mut start = buffer.index();
 
         match buffer.peek_char() {
             ' ' | '\t' => {
@@ -751,7 +754,41 @@ pub fn advance(buffer: &mut SourceBuffer, stack: &mut Vec<char>) -> Result<Token
                 continue
             },
             '#' => {
-                // Handle comment or type comment here!
+                loop {
+                    if buffer.is_end_of_file() {
+                        return Err(Token::Error(buffer.index(), "Unexpected end  of file inside comment!".to_string()))
+                    }
+                    match buffer.peek_three_chars() {
+
+                        ( '\r', '\n', _ ) => {
+                            buffer.next();
+                            buffer.next();
+                            break;
+                        },
+                        ( '\r', _ , _ ) | ( '\n', _ , _ ) => {
+                            buffer.next();
+                            break;
+                        },
+                        _ => {
+                            if buffer.is_end_of_file() {
+                                return Err(Token::Error(buffer.index(), "Unexpected end  of file inside comment!".to_string()))
+                            }
+                            buffer.next()
+                        }
+                    }
+                }
+
+                let element = buffer.slice(start, buffer.index() - 1);
+
+                match element {
+                    Some(text)  => {
+                        if text.starts_with("# type:") {
+                            return Ok(Token::TypeComment(start, buffer.index(), text))
+                        }
+                        continue
+                    },
+                    _ => return Err(Token::Error(buffer.index(), "Unexpected end  of file inside comment!".to_string()))
+                }
             },
             '\r' | '\n' => {
                 match buffer.peek_three_chars() {
@@ -1460,7 +1497,7 @@ mod tests {
         
         match res {
             Some(x) => {
-                assert_eq!(x, Token::Elipsis(0, 3));
+                assert_eq!(x, Token::Ellipsis(0, 3));
             },
             None => assert!(false)
         }
