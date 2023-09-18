@@ -905,7 +905,7 @@ pub fn advance(buffer: &mut SourceBuffer, stack: &mut Vec<char>) -> Result<Token
 }
 
 /// Tokenize a source buffer for parsing
-pub fn tokenize_from_buffer(buffer: &mut SourceBuffer) -> Result<Vec<Token>, Token> {
+pub fn tokenize_from_buffer(buffer: &mut SourceBuffer, tab_size: u8, is_interactive: bool) -> Result<Vec<Token>, Token> {
     let mut tokens : Vec<Token> = Vec::<Token>::new();
     let mut stack : Vec<char> = Vec::<char>::new();
     let mut at_beginning_of_line: bool = true;
@@ -914,7 +914,74 @@ pub fn tokenize_from_buffer(buffer: &mut SourceBuffer) -> Result<Vec<Token>, Tok
 
     loop {
 
+        if at_beginning_of_line {
+            at_beginning_of_line = false;
+            let mut col : u32 = 0;
+            let mut is_blank_line : bool = false;
 
+            loop {
+                match buffer.peek_char() {
+                    ' ' => col += 1,
+                    '\t' => col += tab_size as u32,
+                    _ => break
+                }
+                buffer.next()
+            }
+
+            match buffer.peek_char() {
+                '#' => {
+                    if is_interactive {
+                        col = 0;
+                        is_blank_line = false
+                    }
+                    else {
+                        is_blank_line = true
+                    }
+                },
+                '\r' | '\n' => {
+                    if col == 0 && is_interactive {
+                        is_blank_line = false
+                    }
+                    else if is_interactive {
+                        col = 0;
+                        is_blank_line = false
+                    }
+                    else {
+                        is_blank_line = true
+                    }
+                },
+                _ => ()
+            }
+
+            if !is_blank_line && stack.len() == 0 {
+
+                let el_last = match indent_stack.last() {
+                    Some(x) => x,
+                    _ => &0u32
+                };
+
+                if col > el_last.clone() {
+                    indent_stack.push(col);
+                    pending += 1
+                }
+                else if col < el_last.clone() {
+                    let mut el : u32 = el_last.clone();
+                    loop {
+                        if indent_stack.len() > 1 && col < el {
+                            pending -= 1;
+                            let _ = indent_stack.pop();
+                        }
+                        if indent_stack.len() == 0 || col == el {
+                            break
+                        }
+                    }
+
+                    if col != el {
+                        return Err(Token::Error(buffer.index(), "Inconsistent indentation level!".to_string()))
+                    }
+                }
+            }
+        }
 
         // Handle pending indent or dedent(s)
         if pending != 0 {
