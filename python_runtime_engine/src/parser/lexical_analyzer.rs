@@ -916,7 +916,18 @@ pub fn tokenize_from_buffer(buffer: &mut SourceBuffer) -> Result<Vec<Token>, Tok
 
 
 
-
+        // Handle pending indent or dedent(s)
+        if pending != 0 {
+            if pending < 0 {
+                pending += 1;
+                tokens.push(Token::Dedent(buffer.index()))
+            }
+            else {
+                pending -= 1;
+                tokens.push(Token::Indent(buffer.index()))
+            }
+            continue
+        }
 
         let symbol = advance(buffer, &mut stack);
 
