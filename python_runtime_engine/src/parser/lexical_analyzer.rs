@@ -791,15 +791,27 @@ pub fn advance(buffer: &mut SourceBuffer, stack: &mut Vec<char>, mut is_at_begin
                 }
             },
             '\r' | '\n' => {
+                is_at_beginning_of_line = &true;
                 match buffer.peek_three_chars() {
                     ( '\r', '\n', _ ) => {
                         buffer.next();
                         buffer.next();
-                        continue
+                        match is_blank_line {
+                            true => continue,
+                            _ => {
+                                return Ok(Token::Newline(start, buffer.index(), '\r', '\n'))
+                            }
+                        }
                     },
                     ( '\r', _ , _ ) | ( '\n', _ , _ ) => {
+                        let ch =  buffer.peek_char();
                         buffer.next();
-                        continue
+                        match is_blank_line {
+                            true => continue,
+                            _ => {
+                                return Ok(Token::Newline(start, buffer.index(), ch, ' '))
+                            }
+                        }
                     }
                     _ => ()
                 }
