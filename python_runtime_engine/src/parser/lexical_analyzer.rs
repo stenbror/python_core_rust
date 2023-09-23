@@ -3192,4 +3192,76 @@ mod tests {
             None => assert!(false)
         }
     }
+
+    #[test]
+    fn handle_parenthesis_1() {
+        let mut buffer = SourceBuffer::new();
+        let mut stack : Vec<char> = Vec::new();
+        buffer.from_text("()");
+
+        let res1 = advance(&mut buffer, &mut stack);
+        let res2 = advance(&mut buffer, &mut stack);
+
+        match res1 {
+            Ok(x) => {
+                assert_eq!(x, Token::LeftParen(0, 1))
+            },
+            _ => assert!(false)
+        }
+
+        match res2 {
+            Ok(y) => {
+                assert_eq!(y, Token::RightParen(1, 2))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_parenthesis_2() {
+        let mut buffer = SourceBuffer::new();
+        let mut stack : Vec<char> = Vec::new();
+        buffer.from_text("[]");
+
+        let res1 = advance(&mut buffer, &mut stack);
+        let res2 = advance(&mut buffer, &mut stack);
+
+        match res1 {
+            Ok(x) => {
+                assert_eq!(x, Token::LeftBracket(0, 1))
+            },
+            _ => assert!(false)
+        }
+
+        match res2 {
+            Ok(y) => {
+                assert_eq!(y, Token::RightBracket(1, 2))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_parenthesis_3() {
+        let mut buffer = SourceBuffer::new();
+        let mut stack : Vec<char> = Vec::new();
+        buffer.from_text("{}");
+
+        let res1 = advance(&mut buffer, &mut stack);
+        let res2 = advance(&mut buffer, &mut stack);
+
+        match res1 {
+            Ok(x) => {
+                assert_eq!(x, Token::LeftCurly(0, 1))
+            },
+            _ => assert!(false)
+        }
+
+        match res2 {
+            Ok(y) => {
+                assert_eq!(y, Token::RightCurly(1, 2))
+            },
+            _ => assert!(false)
+        }
+    }
 }
