@@ -2201,6 +2201,22 @@ mod tests {
     }
 
     #[test]
+    fn reserved_keyword_pass_advance() {
+        let mut buffer = SourceBuffer::new();
+        let mut stack : Vec<char> = Vec::new();
+        buffer.from_text("pass");
+
+        let res = advance(&mut buffer, &mut stack);
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Token::Pass(0, 4));
+            },
+            Err(_) => assert!(false)
+        }
+    }
+
+    #[test]
     fn reserved_keyword_raise() {
         let mut buffer = SourceBuffer::new();
         buffer.from_text("raise");
@@ -2392,6 +2408,22 @@ mod tests {
                 assert_eq!(x, Token::Number(0, 7, "0.0e-37".to_string()));
             },
             None => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_number_zero_dot_zero_with_exponent_2_advance() {
+        let mut buffer = SourceBuffer::new();
+        let mut stack : Vec<char> = Vec::new();
+        buffer.from_text("0.0e-37");
+
+        let res = advance(&mut buffer, &mut stack);
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Token::Number(0, 7, "0.0e-37".to_string()));
+            },
+            Err(_) => assert!(false)
         }
     }
 
@@ -2789,6 +2821,22 @@ mod tests {
     }
 
     #[test]
+    fn handle_string_empty_single_quote_advance() {
+        let mut buffer = SourceBuffer::new();
+        let mut stack : Vec<char> = Vec::new();
+        buffer.from_text("''");
+
+        let res = advance(&mut buffer, &mut stack);
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Token::String(0, 2, "''".to_string(), false, false, false));
+            },
+            Err(_) => assert!(false)
+        }
+    }
+
+    #[test]
     fn handle_string_empty_double_quote() {
         let mut buffer = SourceBuffer::new();
         buffer.from_text("\"\"");
@@ -2799,7 +2847,7 @@ mod tests {
             Some(x) => {
                 assert_eq!(x, Token::String(0, 2, "\"\"".to_string(), false, false, false));
             },
-            None => assert!(false)
+            _ => assert!(false)
         }
     }
 
