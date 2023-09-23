@@ -3448,4 +3448,52 @@ mod tests {
             _ => assert!(false)
         }
     }
+
+    #[test]
+    fn handle_type_comment() {
+        let mut buffer = SourceBuffer::new();
+        let mut stack: Vec<char> = Vec::new();
+        buffer.from_text("# type: int\r\n");
+
+        let res = advance(&mut buffer, &mut stack);
+
+        match res {
+            Ok(y) => {
+                assert_eq!(y, Token::TypeComment(0, 13, "# type: int\r\n".to_string()))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_comment() {
+        let mut buffer = SourceBuffer::new();
+        let mut stack: Vec<char> = Vec::new();
+        buffer.from_text("# What happens here!\r\n");
+
+        let res = advance(&mut buffer, &mut stack);
+
+        match res {
+            Ok(y) => {
+                assert_eq!(y, Token::Eof(22))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_eof() {
+        let mut buffer = SourceBuffer::new();
+        let mut stack: Vec<char> = Vec::new();
+        buffer.from_text("");
+
+        let res = advance(&mut buffer, &mut stack);
+
+        match res {
+            Ok(y) => {
+                assert_eq!(y, Token::Eof(0))
+            },
+            _ => assert!(false)
+        }
+    }
 }
