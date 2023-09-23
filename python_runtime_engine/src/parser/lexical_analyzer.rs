@@ -826,7 +826,7 @@ pub fn advance(buffer: &mut SourceBuffer, stack: &mut Vec<char>) -> Result<Token
         }
 
         // Handle reserved keywords or literal name or prefixed strings.
-        let reserved_keywords_or_literal = is_operator_or_delimiter_from_buffer(buffer);
+        let reserved_keywords_or_literal = is_reserved_keyword_or_name_from_buffer(buffer);
         match reserved_keywords_or_literal {
             Some(Token::Error( a , b )) => {
                 return Err(Token::Error(a, b))
@@ -880,17 +880,17 @@ pub fn advance(buffer: &mut SourceBuffer, stack: &mut Vec<char>) -> Result<Token
                     },
                     Token::RightParen( _ , _ ) => {
                         if stack.is_empty() || stack.pop() != Some('(') {
-                            return Err(Token::Error(buffer.index(), "')' does not match '('".to_string()))
+                            return Err(Token::Error(start, "')' does not match '('".to_string()))
                         }
                     },
                     Token::RightBracket( _ , _ ) => {
                         if stack.is_empty() || stack.pop() != Some('[') {
-                            return Err(Token::Error(buffer.index(), "']' does not match '['".to_string()))
+                            return Err(Token::Error(start, "']' does not match '['".to_string()))
                         }
                     },
                     Token::RightCurly( _ , _ ) => {
                         if stack.is_empty() || stack.pop() != Some('{') {
-                            return Err(Token::Error(buffer.index(), "'}' does not match '{'".to_string()))
+                            return Err(Token::Error(start, "'}' does not match '{'".to_string()))
                         }
                     },
                     _ => ()
@@ -3262,6 +3262,30 @@ mod tests {
                 assert_eq!(y, Token::RightCurly(1, 2))
             },
             _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn handle_parenthesis_4() {
+        let mut buffer = SourceBuffer::new();
+        let mut stack : Vec<char> = Vec::new();
+        buffer.from_text("(]");
+
+        let res1 = advance(&mut buffer, &mut stack);
+        let res2 = advance(&mut buffer, &mut stack);
+
+        match res1 {
+            Ok(x) => {
+                assert_eq!(x, Token::LeftParen(0, 1))
+            },
+            _ => assert!(false)
+        }
+
+        match res2 {
+            Ok(y) => {
+                assert!(false)
+            },
+            Err(y) => assert_eq!(y, Token::Error(1, "']' does not match '['".to_string() ))
         }
     }
 }
