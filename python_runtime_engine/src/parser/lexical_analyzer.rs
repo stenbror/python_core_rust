@@ -1035,6 +1035,10 @@ pub fn tokenize_from_buffer(buffer: &mut SourceBuffer, tab_size: u8, is_interact
         }
     }
 
+    if buffer.is_end_of_file() {
+        tokens.push(Token::Eof(buffer.index()))
+    }
+
     Ok(tokens)
 }
 
@@ -3695,5 +3699,33 @@ mod tests {
                 assert!(false)
             }
         }
+    }
+
+    #[test]
+    fn handle_a_few_tokens() {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("for i in range(1, 100): pass\r\n");
+
+        let res = tokenize_from_buffer(&mut buffer, 4, false);
+
+       match res {
+           Ok(x) => {
+               assert_eq!(x.len(), 13);
+               assert_eq!(x.get(0), Some(Token::For(0, 3)).as_ref());
+               assert_eq!(x.get(1), Some(Token::Name(4, 5, "i".to_string())).as_ref());
+               assert_eq!(x.get(2), Some(Token::In(6, 8)).as_ref());
+               assert_eq!(x.get(3), Some(Token::Name(9, 14, "range".to_string())).as_ref());
+               assert_eq!(x.get(4), Some(Token::LeftParen(14, 15)).as_ref());
+               assert_eq!(x.get(5), Some(Token::Number(15, 16, "1".to_string())).as_ref());
+               assert_eq!(x.get(6), Some(Token::Comma(16, 17)).as_ref());
+               assert_eq!(x.get(7), Some(Token::Number(18, 21, "100".to_string())).as_ref());
+               assert_eq!(x.get(8), Some(Token::RightParen(21, 22)).as_ref());
+               assert_eq!(x.get(9), Some(Token::Colon(22, 23)).as_ref());
+               assert_eq!(x.get(10), Some(Token::Pass(24, 28)).as_ref());
+               assert_eq!(x.get(11), Some(Token::Newline(28, 30, '\r', '\n')).as_ref());
+               assert_eq!(x.get(12), Some(Token::Eof(30)).as_ref());
+           },
+           _ => assert!(false)
+       }
     }
 }
