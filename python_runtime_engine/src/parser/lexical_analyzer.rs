@@ -1901,6 +1901,22 @@ mod tests {
     }
 
     #[test]
+    fn reserved_keyword_break_advance_whitespace() {
+        let mut buffer = SourceBuffer::new();
+        let mut stack : Vec<char> = Vec::new();
+        buffer.from_text("    break");
+
+        let res = advance(&mut buffer, &mut stack);
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Token::Break(4, 9));
+            },
+            Err(_) => assert!(false)
+        }
+    }
+
+    #[test]
     fn reserved_keyword_class() {
         let mut buffer = SourceBuffer::new();
         buffer.from_text("class");
@@ -3494,6 +3510,40 @@ mod tests {
                 assert_eq!(y, Token::Eof(0))
             },
             _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn line_continuation_test() {
+        let mut buffer = SourceBuffer::new();
+        let mut stack : Vec<char> = Vec::new();
+        buffer.from_text("\\\r\n");
+
+        let res = advance(&mut buffer, &mut stack);
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Token::Eof(3));
+            },
+            Err(_) => assert!(false)
+        }
+    }
+
+    #[test]
+    fn line_continuation_test_should_fail() {
+        let mut buffer = SourceBuffer::new();
+        let mut stack : Vec<char> = Vec::new();
+        buffer.from_text("\\ ");
+
+        let res = advance(&mut buffer, &mut stack);
+
+        match res {
+            Ok(x) => {
+                assert!(false)
+            },
+            Err(y) => {
+                assert_eq!(y, Token::Error(0, "Newline should follow line continuation character '\\'".to_string()))
+            }
         }
     }
 }
