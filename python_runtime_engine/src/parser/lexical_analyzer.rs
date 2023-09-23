@@ -744,7 +744,7 @@ pub fn is_operator_or_delimiter_from_buffer(buffer: &mut SourceBuffer) -> Option
 }
 
 /// Get the next token symbol from stream
-pub fn advance(buffer: &mut SourceBuffer, stack: &mut Vec<char>, mut is_at_beginning_of_line: &bool, is_blank_line: bool) -> Result<Token, Token> {
+pub fn advance(buffer: &mut SourceBuffer, stack: &mut Vec<char>, is_at_beginning_of_line: bool, is_blank_line: bool) -> Result<Token, Token> {
     loop {
         let mut start = buffer.index();
 
@@ -791,7 +791,6 @@ pub fn advance(buffer: &mut SourceBuffer, stack: &mut Vec<char>, mut is_at_begin
                 }
             },
             '\r' | '\n' => {
-                is_at_beginning_of_line = &true;
                 match buffer.peek_three_chars() {
                     ( '\r', '\n', _ ) => {
                         buffer.next();
@@ -1009,7 +1008,7 @@ pub fn tokenize_from_buffer(buffer: &mut SourceBuffer, tab_size: u8, is_interact
             continue
         }
 
-        let symbol = advance(buffer, &mut stack, &mut at_beginning_of_line, is_blank_line);
+        let symbol = advance(buffer, &mut stack, at_beginning_of_line, is_blank_line);
 
         match symbol {
             Ok(x) => {
@@ -1018,7 +1017,15 @@ pub fn tokenize_from_buffer(buffer: &mut SourceBuffer, tab_size: u8, is_interact
                         tokens.push(x);
                         break;
                     },
-                    _ => tokens.push(x)
+                    Token::Newline(_ , _ , _ , _ ) => {
+                        at_beginning_of_line = true;
+                        tokens.push(x);
+                        break;
+                    }
+                    _ => {
+                        at_beginning_of_line = false;
+                        tokens.push(x)
+                    }
                 }
             },
             Err(x) => {
@@ -1920,7 +1927,7 @@ mod tests {
         let mut at_beginning_of_line = false;
         buffer.from_text("    break");
 
-        let res = advance(&mut buffer, &mut stack, &mut at_beginning_of_line, false);
+        let res = advance(&mut buffer, &mut stack, at_beginning_of_line, false);
 
         match res {
             Ok(x) => {
@@ -2237,7 +2244,7 @@ mod tests {
         let mut is_beginning_of_line = false;
         buffer.from_text("pass");
 
-        let res = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
+        let res = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
 
         match res {
             Ok(x) => {
@@ -2449,7 +2456,7 @@ mod tests {
         let mut is_beginning_of_line = false;
         buffer.from_text("0.0e-37");
 
-        let res = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
+        let res = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
 
         match res {
             Ok(x) => {
@@ -2859,7 +2866,7 @@ mod tests {
         let mut is_beginning_of_line = false;
         buffer.from_text("''");
 
-        let res = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
+        let res = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
 
         match res {
             Ok(x) => {
@@ -3281,8 +3288,8 @@ mod tests {
         let mut is_beginning_of_line = false;
         buffer.from_text("()");
 
-        let res1 = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
-        let res2 = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
+        let res1 = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
+        let res2 = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
 
         match res1 {
             Ok(x) => {
@@ -3306,8 +3313,8 @@ mod tests {
         let mut is_beginning_of_line = false;
         buffer.from_text("[]");
 
-        let res1 = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
-        let res2 = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
+        let res1 = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
+        let res2 = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
 
         match res1 {
             Ok(x) => {
@@ -3331,8 +3338,8 @@ mod tests {
         let mut is_beginning_of_line = false;
         buffer.from_text("{}");
 
-        let res1 = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
-        let res2 = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
+        let res1 = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
+        let res2 = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
 
         match res1 {
             Ok(x) => {
@@ -3356,8 +3363,8 @@ mod tests {
         let mut is_beginning_of_line = false;
         buffer.from_text("(]");
 
-        let res1 = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
-        let res2 = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
+        let res1 = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
+        let res2 = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
 
         match res1 {
             Ok(x) => {
@@ -3381,8 +3388,8 @@ mod tests {
         let mut is_beginning_of_line = false;
         buffer.from_text("(}");
 
-        let res1 = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
-        let res2 = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
+        let res1 = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
+        let res2 = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
 
         match res1 {
             Ok(x) => {
@@ -3406,11 +3413,11 @@ mod tests {
         let mut is_beginning_of_line = false;
         buffer.from_text("((([}");
 
-        let res1 = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
-        let res2 = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
-        let res3 = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
-        let res4 = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
-        let res5 = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
+        let res1 = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
+        let res2 = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
+        let res3 = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
+        let res4 = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
+        let res5 = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
 
         match res1 {
             Ok(x) => {
@@ -3455,10 +3462,10 @@ mod tests {
         let mut is_beginning_of_line = false;
         buffer.from_text("((()");
 
-        let res1 = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
-        let res2 = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
-        let res3 = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
-        let res4 = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
+        let res1 = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
+        let res2 = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
+        let res3 = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
+        let res4 = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
 
         match res1 {
             Ok(x) => {
@@ -3496,7 +3503,7 @@ mod tests {
         let mut is_beginning_of_line = false;
         buffer.from_text("# type: int\r\n");
 
-        let res = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
+        let res = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
 
         match res {
             Ok(y) => {
@@ -3513,7 +3520,7 @@ mod tests {
         let mut is_beginning_of_line = false;
         buffer.from_text("# What happens here!\r\n");
 
-        let res = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
+        let res = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
 
         match res {
             Ok(y) => {
@@ -3530,7 +3537,7 @@ mod tests {
         let mut is_beginning_of_line = false;
         buffer.from_text("");
 
-        let res = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
+        let res = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
 
         match res {
             Ok(y) => {
@@ -3547,7 +3554,7 @@ mod tests {
         let mut is_beginning_of_line = false;
         buffer.from_text("\\\r\n");
 
-        let res = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
+        let res = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
 
         match res {
             Ok(x) => {
@@ -3564,7 +3571,7 @@ mod tests {
         let mut is_beginning_of_line = false;
         buffer.from_text("\\ ");
 
-        let res = advance(&mut buffer, &mut stack, &mut is_beginning_of_line, false);
+        let res = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
 
         match res {
             Ok(x) => {
@@ -3572,6 +3579,120 @@ mod tests {
             },
             Err(y) => {
                 assert_eq!(y, Token::Error(0, "Newline should follow line continuation character '\\'".to_string()))
+            }
+        }
+    }
+
+    #[test]
+    fn handle_newline_with_token_1() {
+        let mut buffer = SourceBuffer::new();
+        let mut stack : Vec<char> = Vec::new();
+        let mut is_beginning_of_line = false;
+        buffer.from_text("\r\n");
+
+        let res = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Token::Newline(0, 2, '\r', '\n'))
+            },
+            Err(_) => {
+                assert!(false)
+            }
+        }
+    }
+
+    #[test]
+    fn handle_newline_with_token_2() {
+        let mut buffer = SourceBuffer::new();
+        let mut stack : Vec<char> = Vec::new();
+        let mut is_beginning_of_line = false;
+        buffer.from_text("\r\n");
+
+        let res = advance(&mut buffer, &mut stack, is_beginning_of_line, true);
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Token::Eof(2))
+            },
+            Err(_) => {
+                assert!(false)
+            }
+        }
+    }
+
+    #[test]
+    fn handle_newline_with_token_3() {
+        let mut buffer = SourceBuffer::new();
+        let mut stack : Vec<char> = Vec::new();
+        let mut is_beginning_of_line = false;
+        buffer.from_text("\r");
+
+        let res = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Token::Newline(0, 1, '\r', ' '))
+            },
+            Err(_) => {
+                assert!(false)
+            }
+        }
+    }
+
+    #[test]
+    fn handle_newline_with_token_4() {
+        let mut buffer = SourceBuffer::new();
+        let mut stack : Vec<char> = Vec::new();
+        let mut is_beginning_of_line = false;
+        buffer.from_text("\r");
+
+        let res = advance(&mut buffer, &mut stack, is_beginning_of_line, true);
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Token::Eof(1))
+            },
+            Err(_) => {
+                assert!(false)
+            }
+        }
+    }
+
+    #[test]
+    fn handle_newline_with_token_5() {
+        let mut buffer = SourceBuffer::new();
+        let mut stack : Vec<char> = Vec::new();
+        let mut is_beginning_of_line = false;
+        buffer.from_text("\n");
+
+        let res = advance(&mut buffer, &mut stack, is_beginning_of_line, false);
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Token::Newline(0, 1, '\n', ' '))
+            },
+            Err(_) => {
+                assert!(false)
+            }
+        }
+    }
+
+    #[test]
+    fn handle_newline_with_token_6() {
+        let mut buffer = SourceBuffer::new();
+        let mut stack : Vec<char> = Vec::new();
+        let mut is_beginning_of_line = false;
+        buffer.from_text("\n");
+
+        let res = advance(&mut buffer, &mut stack, is_beginning_of_line, true);
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Token::Eof(1))
+            },
+            Err(_) => {
+                assert!(false)
             }
         }
     }
