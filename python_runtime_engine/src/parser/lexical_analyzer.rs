@@ -3288,4 +3288,116 @@ mod tests {
             Err(y) => assert_eq!(y, Token::Error(1, "']' does not match '['".to_string() ))
         }
     }
+
+    #[test]
+    fn handle_parenthesis_5() {
+        let mut buffer = SourceBuffer::new();
+        let mut stack : Vec<char> = Vec::new();
+        buffer.from_text("(}");
+
+        let res1 = advance(&mut buffer, &mut stack);
+        let res2 = advance(&mut buffer, &mut stack);
+
+        match res1 {
+            Ok(x) => {
+                assert_eq!(x, Token::LeftParen(0, 1))
+            },
+            _ => assert!(false)
+        }
+
+        match res2 {
+            Ok(y) => {
+                assert!(false)
+            },
+            Err(y) => assert_eq!(y, Token::Error(1, "'}' does not match '{'".to_string() ))
+        }
+    }
+
+    #[test]
+    fn handle_parenthesis_6() {
+        let mut buffer = SourceBuffer::new();
+        let mut stack : Vec<char> = Vec::new();
+        buffer.from_text("((([}");
+
+        let res1 = advance(&mut buffer, &mut stack);
+        let res2 = advance(&mut buffer, &mut stack);
+        let res3 = advance(&mut buffer, &mut stack);
+        let res4 = advance(&mut buffer, &mut stack);
+        let res5 = advance(&mut buffer, &mut stack);
+
+        match res1 {
+            Ok(x) => {
+                assert_eq!(x, Token::LeftParen(0, 1))
+            },
+            _ => assert!(false)
+        }
+
+        match res2 {
+            Ok(x) => {
+                assert_eq!(x, Token::LeftParen(1, 2))
+            },
+            _ => assert!(false)
+        }
+
+        match res3 {
+            Ok(x) => {
+                assert_eq!(x, Token::LeftParen(2, 3))
+            },
+            _ => assert!(false)
+        }
+
+        match res4 {
+            Ok(x) => {
+                assert_eq!(x, Token::LeftBracket(3, 4))
+            },
+            _ => assert!(false)
+        }
+
+        match res5 {
+            Ok(y) => {
+                assert!(false)
+            },
+            Err(y) => assert_eq!(y, Token::Error(4, "'}' does not match '{'".to_string() ))
+        }
+    }
+
+    #[test]
+    fn handle_parenthesis_7() {
+        let mut buffer = SourceBuffer::new();
+        let mut stack : Vec<char> = Vec::new();
+        buffer.from_text("((()");
+
+        let res1 = advance(&mut buffer, &mut stack);
+        let res2 = advance(&mut buffer, &mut stack);
+        let res3 = advance(&mut buffer, &mut stack);
+        let res4 = advance(&mut buffer, &mut stack);
+
+        match res1 {
+            Ok(x) => {
+                assert_eq!(x, Token::LeftParen(0, 1))
+            },
+            _ => assert!(false)
+        }
+
+        match res2 {
+            Ok(x) => {
+                assert_eq!(x, Token::LeftParen(1, 2))
+            },
+            _ => assert!(false)
+        }
+
+        match res3 {
+            Ok(x) => {
+                assert_eq!(x, Token::LeftParen(2, 3))
+            },
+            _ => assert!(false)
+        }
+
+        match res4 {
+            Ok(y) => {
+                assert_eq!(y, Token::RightParen(3, 4))
+            },
+            _ => assert!(false)
+        }
+    }
 }
