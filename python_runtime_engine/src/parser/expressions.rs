@@ -55,6 +55,7 @@ impl ExpressionMethods for Parser {
 				}
 				Ok(Box::new(ParseNode::PyString(pos, self.get_position(), Box::new(texts))))
 			},
+			Token::Error(e_pos, e_text) => Err(SyntaxError::new(e_text.clone(), e_pos.clone())),
 			_ => Err(SyntaxError::new("Expecting valid literal!".to_string(), pos))
 		}
 	}
