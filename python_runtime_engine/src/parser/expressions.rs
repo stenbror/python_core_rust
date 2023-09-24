@@ -11,6 +11,9 @@ pub trait ExpressionMethods {
 	fn parse_term(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_arith(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_shift(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_and_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_xor_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_or_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 }
 
 impl ExpressionMethods for Parser {
@@ -187,16 +190,16 @@ impl ExpressionMethods for Parser {
 		loop {
 			match self.get_symbol() {
 				Token::Plus(_, _) => {
-					let symbol_mul = self.get_symbol();
+					let symbol_plus = self.get_symbol();
 					self.advance();
 					let right = self.parse_term()?;
-					res = Box::new(ParseNode::PyPlus(pos, self.get_position(), res, Box::new(symbol_mul), right))
+					res = Box::new(ParseNode::PyPlus(pos, self.get_position(), res, Box::new(symbol_plus), right))
 				},
 				Token::Minus(_, _) => {
-					let symbol_div = self.get_symbol();
+					let symbol_minus = self.get_symbol();
 					self.advance();
 					let right = self.parse_term()?;
-					res = Box::new(ParseNode::PyMinus(pos, self.get_position(), res, Box::new(symbol_div), right))
+					res = Box::new(ParseNode::PyMinus(pos, self.get_position(), res, Box::new(symbol_minus), right))
 				},
 				_ => break
 			}
@@ -213,16 +216,16 @@ impl ExpressionMethods for Parser {
 		loop {
 			match self.get_symbol() {
 				Token::ShiftLeft(_, _) => {
-					let symbol_mul = self.get_symbol();
+					let symbol_shift_left = self.get_symbol();
 					self.advance();
 					let right = self.parse_arith()?;
-					res = Box::new(ParseNode::PyShiftLeft(pos, self.get_position(), res, Box::new(symbol_mul), right))
+					res = Box::new(ParseNode::PyShiftLeft(pos, self.get_position(), res, Box::new(symbol_shift_left), right))
 				},
 				Token::ShiftRight(_, _) => {
-					let symbol_div = self.get_symbol();
+					let symbol_shift_right = self.get_symbol();
 					self.advance();
 					let right = self.parse_arith()?;
-					res = Box::new(ParseNode::PyShiftRight(pos, self.get_position(), res, Box::new(symbol_div), right))
+					res = Box::new(ParseNode::PyShiftRight(pos, self.get_position(), res, Box::new(symbol_shift_right), right))
 				},
 				_ => break
 			}
@@ -231,7 +234,65 @@ impl ExpressionMethods for Parser {
 		Ok(res)
 	}
 
+	/// Rule: and_expr := shift ( '&' shift )*
+	fn parse_and_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		let pos = self.get_position();
+		let mut res = self.parse_shift()?;
 
+		loop {
+			match self.get_symbol() {
+				Token::BitAnd(_, _) => {
+					let symbol_bit_and = self.get_symbol();
+					self.advance();
+					let right = self.parse_shift()?;
+					res = Box::new(ParseNode::PyBitAnd(pos, self.get_position(), res, Box::new(symbol_bit_and), right))
+				},
+				_ => break
+			}
+		}
+
+		Ok(res)
+	}
+
+	/// Rule: xor_Expr := and_expr ( '^' and_expr )*
+	fn parse_xor_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		let pos = self.get_position();
+		let mut res = self.parse_and_expr()?;
+
+		loop {
+			match self.get_symbol() {
+				Token::BitXor(_, _) => {
+					let symbol_bit_xor = self.get_symbol();
+					self.advance();
+					let right = self.parse_and_expr()?;
+					res = Box::new(ParseNode::PyBitXor(pos, self.get_position(), res, Box::new(symbol_bit_xor), right))
+				},
+				_ => break
+			}
+		}
+
+		Ok(res)
+	}
+
+	/// Rule: or_expr := xor_expr ( '|' xor_expr )*
+	fn parse_or_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		let pos = self.get_position();
+		let mut res = self.parse_xor_expr()?;
+
+		loop {
+			match self.get_symbol() {
+				Token::BitOr(_, _) => {
+					let symbol_bit_or = self.get_symbol();
+					self.advance();
+					let right = self.parse_xor_expr()?;
+					res = Box::new(ParseNode::PyBitOr(pos, self.get_position(), res, Box::new(symbol_bit_or), right))
+				},
+				_ => break
+			}
+		}
+
+		Ok(res)
+	}
 }
 
 #[cfg(test)]

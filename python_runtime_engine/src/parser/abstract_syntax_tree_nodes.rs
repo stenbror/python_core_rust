@@ -24,4 +24,7 @@ pub enum ParseNode {
 	PyMinus(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 	PyShiftLeft(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 	PyShiftRight(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyBitAnd(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyBitXor(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyBitOr(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 }
