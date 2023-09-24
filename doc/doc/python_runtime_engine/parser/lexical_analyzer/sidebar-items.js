@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Token"],"fn":["is_number_from_buffer","is_operator_or_delimiter_from_buffer","is_reserved_keyword_or_name_from_buffer","is_string_from_buffer","tokenize_from_buffer"]};
+window.SIDEBAR_ITEMS = {"enum":["Token"],"fn":["advance","is_number_from_buffer","is_operator_or_delimiter_from_buffer","is_reserved_keyword_or_name_from_buffer","is_string_from_buffer","tokenize_from_buffer"]};

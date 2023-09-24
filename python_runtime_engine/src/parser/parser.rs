@@ -1,7 +1,7 @@
 use crate::parser::lexical_analyzer::{Token, tokenize_from_buffer};
 use crate::parser::source_buffer::SourceBuffer;
 
-trait ParserMethods {
+pub trait ParserMethods {
 	fn new(buffer: &mut SourceBuffer, tab_size: u8) -> Self;
 	fn get_symbol(&self) -> Token;
 	fn get_position(&self) -> u32;
@@ -15,6 +15,7 @@ pub struct Parser {
 }
 
 impl ParserMethods for Parser {
+	/// Create and populate parser with tokens
 	fn new(buffer: &mut SourceBuffer, tab_size: u8) -> Parser {
 		let mut _symbols = Vec::<Token>::new();
 
