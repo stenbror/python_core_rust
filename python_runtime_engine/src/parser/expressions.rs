@@ -31,6 +31,14 @@ impl ExpressionMethods for Parser {
 				self.advance();
 				Ok(Box::new(ParseNode::PyEllipsis(pos, self.get_position(), Box::new(symbol))))
 			},
+			Token::Name( _, _ , _ ) => {
+				self.advance();
+				Ok(Box::new(ParseNode::PyName(pos, self.get_position(), Box::new(symbol))))
+			},
+			Token::Number( _, _ , _ ) => {
+				self.advance();
+				Ok(Box::new(ParseNode::PyNumber(pos, self.get_position(), Box::new(symbol))))
+			},
 			_ => Err(SyntaxError::new("Expecting valid literal!".to_string(), pos))
 		}
 	}
@@ -105,6 +113,38 @@ mod tests {
 		match res {
 			Ok(x) => {
 				assert_eq!(x, Box::new(ParseNode::PyEllipsis(0, 3, Box::new(Token::Ellipsis(0, 3)))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_atom_name() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("__init__\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_atom();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyName(0, 8, Box::new(Token::Name(0, 8, "__init__".to_string())))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_atom_number() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text(".0J\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_atom();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyNumber(0, 3, Box::new(Token::Number(0, 3, ".0J".to_string())))))
 			},
 			_ => assert!(false)
 		}
