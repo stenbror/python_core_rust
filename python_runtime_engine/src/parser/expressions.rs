@@ -39,6 +39,22 @@ impl ExpressionMethods for Parser {
 				self.advance();
 				Ok(Box::new(ParseNode::PyNumber(pos, self.get_position(), Box::new(symbol))))
 			},
+			Token::String( _ , _ , _ , _ , _ , _  ) => {
+				let mut texts : Vec<Box<Token>> = Vec::new();
+				texts.push(Box::new(symbol));
+				self.advance();
+				loop {
+					let symbol1 = self.get_symbol();
+					match &symbol1 {
+						Token::String( _ , _ , _ , _ , _, _ ) => {
+							texts.push(Box::new(symbol1));
+							self.advance();
+						},
+						_ => break
+					}
+				}
+				Ok(Box::new(ParseNode::PyString(pos, self.get_position(), Box::new(texts))))
+			},
 			_ => Err(SyntaxError::new("Expecting valid literal!".to_string(), pos))
 		}
 	}
@@ -145,6 +161,45 @@ mod tests {
 		match res {
 			Ok(x) => {
 				assert_eq!(x, Box::new(ParseNode::PyNumber(0, 3, Box::new(Token::Number(0, 3, ".0J".to_string())))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_atom_simple_string() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("'Hello, World!'\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_atom();
+
+		match res {
+			Ok(x) => {
+				let mut fasit = Vec::new();
+				fasit.push(Box::new(Token::String(0, 15, "'Hello, World!'".to_string(), false, false, false)));
+
+				assert_eq!(x, Box::new(ParseNode::PyString(0, 15, Box::new( fasit))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_atom_multiple_string() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("'Hello, World!'\\\r\n'__init__'\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_atom();
+
+		match res {
+			Ok(x) => {
+				let mut fasit = Vec::new();
+				fasit.push(Box::new(Token::String(0, 15, "'Hello, World!'".to_string(), false, false, false)));
+				fasit.push(Box::new(Token::String(18, 28, "'__init__'".to_string(), false, false, false)));
+
+				assert_eq!(x, Box::new(ParseNode::PyString(0, 28, Box::new( fasit))))
 			},
 			_ => assert!(false)
 		}

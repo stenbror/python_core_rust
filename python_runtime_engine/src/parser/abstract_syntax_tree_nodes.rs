@@ -8,5 +8,5 @@ pub enum ParseNode {
 	PyEllipsis(u32, u32, Box<Token>),
 	PyName(u32, u32, Box<Token>),
 	PyNumber(u32, u32, Box<Token>),
-	PyString(u32, u32, Box<Vec<Box<String>>>)
+	PyString(u32, u32, Box<Vec<Box<Token>>>)
 }
