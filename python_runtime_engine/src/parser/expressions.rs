@@ -310,8 +310,89 @@ impl ExpressionMethods for Parser {
 		}
 	}
 
+	/// Rule: comparison := or_expr ( ( '<' | '<=' | '==' | '!=' | '>=' | '>' | 'is' | 'is' 'not' | 'in' | 'not' 'in' ) or_expr )*
 	fn parse_comparison(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-		todo!()
+		let pos = self.get_position();
+		let mut res = self.parse_or_expr()?;
+
+		loop {
+			match self.get_symbol() {
+				Token::Less(_, _) => {
+					let symbol_less = self.get_symbol();
+					self.advance();
+					let right = self.parse_or_expr()?;
+					res = Box::new(ParseNode::PyLess(pos, self.get_position(), res, Box::new(symbol_less), right))
+				},
+				Token::LessEqual(_, _) => {
+					let symbol_less_equal = self.get_symbol();
+					self.advance();
+					let right = self.parse_or_expr()?;
+					res = Box::new(ParseNode::PyLessEqual(pos, self.get_position(), res, Box::new(symbol_less_equal), right))
+				},
+				Token::Equal(_, _) => {
+					let symbol_equal = self.get_symbol();
+					self.advance();
+					let right = self.parse_or_expr()?;
+					res = Box::new(ParseNode::PyLess(pos, self.get_position(), res, Box::new(symbol_equal), right))
+				},
+				Token::GreaterEqual(_, _) => {
+					let symbol_greater_equal = self.get_symbol();
+					self.advance();
+					let right = self.parse_or_expr()?;
+					res = Box::new(ParseNode::PyGreaterEqual(pos, self.get_position(), res, Box::new(symbol_greater_equal), right))
+				},
+				Token::Greater(_, _) => {
+					let symbol_equal = self.get_symbol();
+					self.advance();
+					let right = self.parse_or_expr()?;
+					res = Box::new(ParseNode::PyGreater(pos, self.get_position(), res, Box::new(symbol_equal), right))
+				},
+				Token::NotEqual(_, _) => {
+					let symbol_not_equal = self.get_symbol();
+					self.advance();
+					let right = self.parse_or_expr()?;
+					res = Box::new(ParseNode::PyNotEqual(pos, self.get_position(), res, Box::new(symbol_not_equal), right))
+				},
+				Token::In(_, _) => {
+					let symbol_in = self.get_symbol();
+					self.advance();
+					let right = self.parse_or_expr()?;
+					res = Box::new(ParseNode::PyIn(pos, self.get_position(), res, Box::new(symbol_in), right))
+				},
+				Token::Is(_ , _) => {
+					let symbol_is = self.get_symbol();
+					self.advance();
+					match self.get_symbol() {
+						Token::Not(_ , _) => {
+							let symbol_not = self.get_symbol();
+							self.advance();
+							let right = self.parse_or_expr()?;
+							res = Box::new(ParseNode::PyIsNot(pos, self.get_position(), res, Box::new(symbol_is), Box::new(symbol_not), right))
+						},
+						_ => {
+							let right = self.parse_or_expr()?;
+							res = Box::new(ParseNode::PyIs(pos, self.get_position(), res, Box::new(symbol_is), right))
+						}
+					}
+				},
+				Token::Not(_ , _) => {
+					let symbol_not = self.get_symbol();
+					self.advance();
+					match self.get_symbol() {
+						Token::In(_ , _) => {
+							let symbol_in = self.get_symbol();
+							self.advance();
+							let right = self.parse_or_expr()?;
+							res = Box::new(ParseNode::PyNotIn(pos, self.get_position(), res, Box::new(symbol_not), Box::new(symbol_in), right))
+						},
+						_ => return Err(SyntaxError::new("Expecting 'not' 'in' and not 'not' alone! ".to_string(), self.get_position()))
+					}
+				}
+				_ => break
+			}
+		}
+
+		Ok(res)
 	}
 }
 
