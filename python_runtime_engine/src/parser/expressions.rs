@@ -6,6 +6,8 @@ use crate::parser::syntax_error::{SyntaxError, SyntaxErrorMethods};
 pub trait ExpressionMethods {
 	fn parse_atom(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_atom_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_power(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_factor(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 }
 
 impl ExpressionMethods for Parser {
@@ -86,6 +88,47 @@ impl ExpressionMethods for Parser {
 					_ => Ok(Box::new(ParseNode::PyAtomExpr(pos, self.get_position(), await_symbol, right, Box::new(trailers))))
 				}
 			}
+		}
+	}
+
+	/// Rule: power := atom_expr [ '**' factor ]
+	fn parse_power(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		let pos = self.get_position();
+		let left = self.parse_atom_expr()?;
+		match self.get_symbol() {
+			Token::Power( _ , _ ) => {
+				let symbol = self.get_symbol();
+				self.advance();
+				let right = self.parse_factor()?;
+				Ok(Box::new(ParseNode::PyPower(pos, self.get_position(), left, Box::new(symbol), right)))
+			},
+			_ => Ok(left)
+		}
+	}
+
+	// Rule: factor := ( '+' | '-' | '~' ) factor | power
+	fn parse_factor(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		let pos = self.get_position();
+		match self.get_symbol() {
+			Token::Plus( _ , _ ) => {
+				let symbol_plus = self.get_symbol();
+				self.advance();
+				let right_plus = self.parse_factor()?;
+				Ok(Box::new(ParseNode::PyUnaryPlus(pos, self.get_position(), Box::new(symbol_plus), right_plus)))
+			},
+			Token::Minus( _ , _ ) => {
+				let symbol_minus = self.get_symbol();
+				self.advance();
+				let right_minus = self.parse_factor()?;
+				Ok(Box::new(ParseNode::PyUnaryPlus(pos, self.get_position(), Box::new(symbol_minus), right_minus)))
+			},
+			Token::BitInvert( _ , _ ) => {
+				let symbol_invert = self.get_symbol();
+				self.advance();
+				let right_invert = self.parse_factor()?;
+				Ok(Box::new(ParseNode::PyUnaryPlus(pos, self.get_position(), Box::new(symbol_invert), right_invert)))
+			},
+			_ => self.parse_power()
 		}
 	}
 }
