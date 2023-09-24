@@ -187,6 +187,112 @@ mod tests {
 
 
 	#[test]
+	fn parse_single_mul_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a * b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_term();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyMul(0, 5, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::Mul(2, 3)), Box::new(ParseNode::PyName(4, 5, Box::new(Token::Name(4, 5, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_single_div_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a / b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_term();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyDiv(0, 5, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::Div(2, 3)), Box::new(ParseNode::PyName(4, 5, Box::new(Token::Name(4, 5, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_single_modulo_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a % b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_term();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyModulo(0, 5, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::Modulo(2, 3)), Box::new(ParseNode::PyName(4, 5, Box::new(Token::Name(4, 5, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_single_matrices_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a @ b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_term();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyMatrices(0, 5, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::Decorator(2, 3)), Box::new(ParseNode::PyName(4, 5, Box::new(Token::Name(4, 5, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_single_floor_div_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a // b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_term();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyFloorDiv(0, 6, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::DoubleDiv(2, 4)), Box::new(ParseNode::PyName(5, 6, Box::new(Token::Name(5, 6, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+
+	/// HERE! MF
+
+
+	#[test]
+	fn parse_double_mul_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a * b * c\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_term();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyMul(0, 9, Box::new(
+					ParseNode::PyMul(0, 6, Box::new(
+						ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))
+					), Box::new(Token::Mul(2, 3)), Box::new(
+						ParseNode::PyName(4, 6, Box::new(Token::Name(4, 5, "b".to_string())))
+					))
+				), Box::new(Token::Mul(6, 7)), Box::new(ParseNode::PyName(8, 9, Box::new(Token::Name(8, 9, "c".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
 	fn parse_unary_plus() {
 		let mut buffer = SourceBuffer::new();
 		buffer.from_text("+a\r\n");
