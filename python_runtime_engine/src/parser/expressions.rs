@@ -16,6 +16,9 @@ pub trait ExpressionMethods {
 	fn parse_or_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_star_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_comparison(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_not_test(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_and_test(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_or_test(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 }
 
 impl ExpressionMethods for Parser {
@@ -394,6 +397,57 @@ impl ExpressionMethods for Parser {
 
 		Ok(res)
 	}
+
+	fn parse_not_test(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		let pos = self.get_position();
+		match self.get_symbol() {
+			Token::Not( _ , _ ) => {
+				let symbol = self.get_symbol();
+				self.advance();
+				let right = self.parse_not_test()?;
+				Ok(Box::new(ParseNode::PyNotTest(pos, self.get_position(), Box::new(symbol), right)))
+			},
+			_ => self.parse_comparison()
+		}
+	}
+
+	fn parse_and_test(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		let pos = self.get_position();
+		let mut res = self.parse_not_test()?;
+
+		loop {
+			match self.get_symbol() {
+				Token::And(_, _) => {
+					let symbol_and_test = self.get_symbol();
+					self.advance();
+					let right = self.parse_not_test()?;
+					res = Box::new(ParseNode::PyAndTest(pos, self.get_position(), res, Box::new(symbol_and_test), right))
+				},
+				_ => break
+			}
+		}
+
+		Ok(res)
+	}
+
+	fn parse_or_test(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		let pos = self.get_position();
+		let mut res = self.parse_and_test()?;
+
+		loop {
+			match self.get_symbol() {
+				Token::Or(_, _) => {
+					let symbol_or_test = self.get_symbol();
+					self.advance();
+					let right = self.parse_and_test()?;
+					res = Box::new(ParseNode::PyOrTest(pos, self.get_position(), res, Box::new(symbol_or_test), right))
+				},
+				_ => break
+			}
+		}
+
+		Ok(res)
+	}
 }
 
 #[cfg(test)]
@@ -403,6 +457,69 @@ mod tests {
 	use super::*;
 
 
+	#[test]
+	fn parse_single_or_test() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a or b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_or_test();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyOrTest(0, 6, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::Or(2, 4)), Box::new(ParseNode::PyName(5, 6, Box::new(Token::Name(5, 6, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_single_and_test() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a and b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_and_test();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyAndTest(0, 7, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::And(2, 5)), Box::new(ParseNode::PyName(6, 7, Box::new(Token::Name(6, 7, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_single_not_test() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("not a\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_not_test();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyNotTest(0, 5, Box::new(Token::Not(0, 3)), Box::new(ParseNode::PyName(4, 5, Box::new(Token::Name(4, 5, "a".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_multiple_not_test() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("not not a\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_not_test();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyNotTest(0, 9, Box::new(Token::Not(0, 3)),  Box::new(ParseNode::PyNotTest(4, 9, Box::new(Token::Not(4, 7)), Box::new(ParseNode::PyName(8, 9, Box::new(Token::Name(8, 9, "a".to_string()))))))   )))
+			},
+			_ => assert!(false)
+		}
+	}
 
 	#[test]
 	fn parse_single_less_operator() {

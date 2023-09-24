@@ -38,4 +38,7 @@ pub enum ParseNode {
 	PyNotIn(u32, u32, Box<ParseNode>,  Box<Token>, Box<Token>, Box<ParseNode>),
 	PyIs(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 	PyIsNot(u32, u32, Box<ParseNode>, Box<Token>, Box<Token>, Box<ParseNode>),
+	PyNotTest(u32, u32, Box<Token>, Box<ParseNode>),
+	PyAndTest(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyOrTest(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 }
