@@ -22,4 +22,6 @@ pub enum ParseNode {
 	PyMatrices(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 	PyPlus(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 	PyMinus(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyShiftLeft(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyShiftRight(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 }

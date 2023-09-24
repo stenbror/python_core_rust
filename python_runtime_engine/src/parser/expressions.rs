@@ -10,6 +10,7 @@ pub trait ExpressionMethods {
 	fn parse_factor(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_term(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_arith(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_shift(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 }
 
 impl ExpressionMethods for Parser {
@@ -204,6 +205,32 @@ impl ExpressionMethods for Parser {
 		Ok(res)
 	}
 
+	/// Rule: arith :- arith ( ( '<<' | '>>' ) arith )*
+	fn parse_shift(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		let pos = self.get_position();
+		let mut res = self.parse_arith()?;
+
+		loop {
+			match self.get_symbol() {
+				Token::ShiftLeft(_, _) => {
+					let symbol_mul = self.get_symbol();
+					self.advance();
+					let right = self.parse_arith()?;
+					res = Box::new(ParseNode::PyShiftLeft(pos, self.get_position(), res, Box::new(symbol_mul), right))
+				},
+				Token::ShiftRight(_, _) => {
+					let symbol_div = self.get_symbol();
+					self.advance();
+					let right = self.parse_arith()?;
+					res = Box::new(ParseNode::PyShiftRight(pos, self.get_position(), res, Box::new(symbol_div), right))
+				},
+				_ => break
+			}
+		}
+
+		Ok(res)
+	}
+
 
 }
 
@@ -213,6 +240,60 @@ mod tests {
 	use crate::parser::source_buffer::{SourceBuffer, SourceBufferMethods};
 	use super::*;
 
+
+	#[test]
+	fn parse_single_shift_left_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a << b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_shift();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyShiftLeft(0, 6, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::ShiftLeft(2, 4)), Box::new(ParseNode::PyName(5, 6, Box::new(Token::Name(5, 6, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_single_shift_right_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a >> b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_shift();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyShiftRight(0, 6, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::ShiftRight(2, 4)), Box::new(ParseNode::PyName(5, 6, Box::new(Token::Name(5, 6, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_double_shift_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a << b >> c\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_shift();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyShiftRight(0, 11, Box::new(
+					ParseNode::PyShiftLeft(0, 7, Box::new(
+						ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))
+					), Box::new(Token::ShiftLeft(2, 4)), Box::new(
+						ParseNode::PyName(5, 7, Box::new(Token::Name(5, 6, "b".to_string())))
+					))
+				), Box::new(Token::ShiftRight(7, 9)), Box::new(ParseNode::PyName(10, 11, Box::new(Token::Name(10, 11, "c".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
 
 	#[test]
 	fn parse_single_plus_operator() {
