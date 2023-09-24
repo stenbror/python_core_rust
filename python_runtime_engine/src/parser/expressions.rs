@@ -9,6 +9,7 @@ pub trait ExpressionMethods {
 	fn parse_power(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_factor(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_term(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_arith(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 }
 
 impl ExpressionMethods for Parser {
@@ -177,6 +178,33 @@ impl ExpressionMethods for Parser {
 		Ok(res)
 	}
 
+	/// Rule: arith :- term ( ( '+' | '-' ) term )*
+	fn parse_arith(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		let pos = self.get_position();
+		let mut res = self.parse_term()?;
+
+		loop {
+			match self.get_symbol() {
+				Token::Plus(_, _) => {
+					let symbol_mul = self.get_symbol();
+					self.advance();
+					let right = self.parse_term()?;
+					res = Box::new(ParseNode::PyPlus(pos, self.get_position(), res, Box::new(symbol_mul), right))
+				},
+				Token::Minus(_, _) => {
+					let symbol_div = self.get_symbol();
+					self.advance();
+					let right = self.parse_term()?;
+					res = Box::new(ParseNode::PyMinus(pos, self.get_position(), res, Box::new(symbol_div), right))
+				},
+				_ => break
+			}
+		}
+
+		Ok(res)
+	}
+
+
 }
 
 #[cfg(test)]
@@ -185,6 +213,60 @@ mod tests {
 	use crate::parser::source_buffer::{SourceBuffer, SourceBufferMethods};
 	use super::*;
 
+
+	#[test]
+	fn parse_single_plus_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a + b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_arith();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyPlus(0, 5, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::Plus(2, 3)), Box::new(ParseNode::PyName(4, 5, Box::new(Token::Name(4, 5, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_single_minus_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a - b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_arith();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyMinus(0, 5, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::Minus(2, 3)), Box::new(ParseNode::PyName(4, 5, Box::new(Token::Name(4, 5, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_double_arith_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a + b - c\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_arith();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyMinus(0, 9, Box::new(
+					ParseNode::PyPlus(0, 6, Box::new(
+						ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))
+					), Box::new(Token::Plus(2, 3)), Box::new(
+						ParseNode::PyName(4, 6, Box::new(Token::Name(4, 5, "b".to_string())))
+					))
+				), Box::new(Token::Minus(6, 7)), Box::new(ParseNode::PyName(8, 9, Box::new(Token::Name(8, 9, "c".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
 
 	#[test]
 	fn parse_single_mul_operator() {
@@ -265,11 +347,7 @@ mod tests {
 			_ => assert!(false)
 		}
 	}
-
-
-	/// HERE! MF
-
-
+	
 	#[test]
 	fn parse_double_mul_operator() {
 		let mut buffer = SourceBuffer::new();

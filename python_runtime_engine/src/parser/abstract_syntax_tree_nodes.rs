@@ -19,5 +19,7 @@ pub enum ParseNode {
 	PyDiv(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 	PyFloorDiv(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 	PyModulo(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
-	PyMatrices(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>)
+	PyMatrices(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyPlus(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyMinus(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 }
