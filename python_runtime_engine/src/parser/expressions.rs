@@ -65,7 +65,7 @@ impl ExpressionMethods for Parser {
 	/// Rule: atom_Expr := [ 'await' ] atom [ Trailer+ ]
 	fn parse_atom_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
 		let pos = self.get_position();
-		let mut symbol = self.get_symbol();
+		let symbol = self.get_symbol();
 		let await_symbol = match &symbol {
 			Token::Await( _ , _ ) => {
 				self.advance();
@@ -120,13 +120,13 @@ impl ExpressionMethods for Parser {
 				let symbol_minus = self.get_symbol();
 				self.advance();
 				let right_minus = self.parse_factor()?;
-				Ok(Box::new(ParseNode::PyUnaryPlus(pos, self.get_position(), Box::new(symbol_minus), right_minus)))
+				Ok(Box::new(ParseNode::PyUnaryMinus(pos, self.get_position(), Box::new(symbol_minus), right_minus)))
 			},
 			Token::BitInvert( _ , _ ) => {
 				let symbol_invert = self.get_symbol();
 				self.advance();
 				let right_invert = self.parse_factor()?;
-				Ok(Box::new(ParseNode::PyUnaryPlus(pos, self.get_position(), Box::new(symbol_invert), right_invert)))
+				Ok(Box::new(ParseNode::PyUnaryBitInvert(pos, self.get_position(), Box::new(symbol_invert), right_invert)))
 			},
 			_ => self.parse_power()
 		}
@@ -140,6 +140,53 @@ mod tests {
 	use super::*;
 
 
+	#[test]
+	fn parse_unary_plus() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("+a\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_factor();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyUnaryPlus(0, 2, Box::new(Token::Plus(0, 1)), Box::new(ParseNode::PyName(1, 2, Box::new(Token::Name(1, 2, "a".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_unary_minus() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("-a\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_factor();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyUnaryMinus(0, 2, Box::new(Token::Minus(0, 1)), Box::new(ParseNode::PyName(1, 2, Box::new(Token::Name(1, 2, "a".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_unary_bit_invert() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("~a\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_factor();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyUnaryBitInvert(0, 2, Box::new(Token::BitInvert(0, 1)), Box::new(ParseNode::PyName(1, 2, Box::new(Token::Name(1, 2, "a".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
 
 	#[test]
 	fn parse_power_operator() {
