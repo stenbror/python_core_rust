@@ -302,6 +302,122 @@ mod tests {
 	use super::*;
 
 
+
+
+	#[test]
+	fn parse_single_bit_and_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a & b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_and_expr();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyBitAnd(0, 5, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::BitAnd(2, 3)), Box::new(ParseNode::PyName(4, 5, Box::new(Token::Name(4, 5, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_double_bit_and_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a & b & c\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_and_expr();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyBitAnd(0, 9, Box::new(
+					ParseNode::PyBitAnd(0, 6, Box::new(
+						ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))
+					), Box::new(Token::BitAnd(2, 3)), Box::new(
+						ParseNode::PyName(4, 6, Box::new(Token::Name(4, 5, "b".to_string())))
+					))
+				), Box::new(Token::BitAnd(6, 7)), Box::new(ParseNode::PyName(8, 9, Box::new(Token::Name(8, 9, "c".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_single_bit_xor_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a ^ b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_xor_expr();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyBitXor(0, 5, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::BitXor(2, 3)), Box::new(ParseNode::PyName(4, 5, Box::new(Token::Name(4, 5, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_double_bit_xor_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a ^ b ^ c\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_xor_expr();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyBitXor(0, 9, Box::new(
+					ParseNode::PyBitXor(0, 6, Box::new(
+						ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))
+					), Box::new(Token::BitXor(2, 3)), Box::new(
+						ParseNode::PyName(4, 6, Box::new(Token::Name(4, 5, "b".to_string())))
+					))
+				), Box::new(Token::BitXor(6, 7)), Box::new(ParseNode::PyName(8, 9, Box::new(Token::Name(8, 9, "c".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_single_bit_or_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a | b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_or_expr();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyBitOr(0, 5, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::BitOr(2, 3)), Box::new(ParseNode::PyName(4, 5, Box::new(Token::Name(4, 5, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_double_bit_or_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a | b | c\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_or_expr();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyBitOr(0, 9, Box::new(
+					ParseNode::PyBitOr(0, 6, Box::new(
+						ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))
+					), Box::new(Token::BitOr(2, 3)), Box::new(
+						ParseNode::PyName(4, 6, Box::new(Token::Name(4, 5, "b".to_string())))
+					))
+				), Box::new(Token::BitOr(6, 7)), Box::new(ParseNode::PyName(8, 9, Box::new(Token::Name(8, 9, "c".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
 	#[test]
 	fn parse_single_shift_left_operator() {
 		let mut buffer = SourceBuffer::new();
