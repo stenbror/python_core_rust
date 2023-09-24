@@ -60,8 +60,33 @@ impl ExpressionMethods for Parser {
 		}
 	}
 
+	/// Rule: atom_Expr := [ 'await' ] atom [ Trailer+ ]
 	fn parse_atom_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-		todo!()
+		let pos = self.get_position();
+		let mut symbol = self.get_symbol();
+		let await_symbol = match &symbol {
+			Token::Await( _ , _ ) => {
+				self.advance();
+				Some(symbol.clone())
+			},
+			_ => None
+		};
+		let right = self.parse_atom()?;
+		let mut trailers : Vec<Box<ParseNode>> = Vec::new();
+
+		// todo! add trailer handling here!
+
+		match &await_symbol {
+			Some(Token::Await( _, _ )) => {
+				Ok(Box::new(ParseNode::PyAtomExpr(pos, self.get_position(), await_symbol, right, Box::new(trailers))))
+			},
+			_ => {
+				match trailers.len() {
+					0 => Ok(right),
+					_ => Ok(Box::new(ParseNode::PyAtomExpr(pos, self.get_position(), await_symbol, right, Box::new(trailers))))
+				}
+			}
+		}
 	}
 }
 
@@ -70,6 +95,44 @@ mod tests {
 	use crate::parser::parser::ParserMethods;
 	use crate::parser::source_buffer::{SourceBuffer, SourceBufferMethods};
 	use super::*;
+
+
+	#[test]
+	fn parse_atom_expr_await_name() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("await test\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_atom_expr();
+
+		match res {
+			Ok(x) => {
+				let trailers : Box<Vec<Box<ParseNode>>> = Box::new(Vec::new());
+
+				assert_eq!(x, Box::new(ParseNode::PyAtomExpr(0, 10,
+                Some(Token::Await(0, 5)),
+                Box::new(ParseNode::PyName(6, 10, Box::new(Token::Name(6, 10, "test".to_string())))),
+				trailers )));
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_atom_expr_none() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("None\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_atom_expr();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyNone(0, 4, Box::new(Token::None(0, 4)))))
+			},
+			_ => assert!(false)
+		}
+	}
 
 	#[test]
 	fn parse_atom_none() {
