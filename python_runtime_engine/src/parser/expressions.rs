@@ -19,6 +19,18 @@ impl ExpressionMethods for Parser {
 				self.advance();
 				Ok(Box::new(ParseNode::PyNone(pos, self.get_position(), Box::new(symbol))))
 			},
+			Token::False( _, _ ) => {
+				self.advance();
+				Ok(Box::new(ParseNode::PyFalse(pos, self.get_position(), Box::new(symbol))))
+			},
+			Token::True( _, _ ) => {
+				self.advance();
+				Ok(Box::new(ParseNode::PyTrue(pos, self.get_position(), Box::new(symbol))))
+			},
+			Token::Ellipsis( _, _ ) => {
+				self.advance();
+				Ok(Box::new(ParseNode::PyEllipsis(pos, self.get_position(), Box::new(symbol))))
+			},
 			_ => Err(SyntaxError::new("Expecting valid literal!".to_string(), pos))
 		}
 	}
@@ -45,6 +57,54 @@ mod tests {
 		match res {
 			Ok(x) => {
 				assert_eq!(x, Box::new(ParseNode::PyNone(0, 4, Box::new(Token::None(0, 4)))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_atom_false() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("False\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_atom();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyFalse(0, 5, Box::new(Token::False(0, 5)))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_atom_true() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("True\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_atom();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyTrue(0, 4, Box::new(Token::True(0, 4)))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_atom_ellipsis() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("...\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_atom();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyEllipsis(0, 3, Box::new(Token::Ellipsis(0, 3)))))
 			},
 			_ => assert!(false)
 		}

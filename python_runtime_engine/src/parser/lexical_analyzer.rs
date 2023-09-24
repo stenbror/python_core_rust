@@ -848,16 +848,22 @@ pub fn advance(buffer: &mut SourceBuffer, stack: &mut Vec<char>, is_at_beginning
             _ => ()
         }
 
-        // Handle numbers except for those starting with a dot.
-        let number_literal = is_number_from_buffer(buffer);
-        match number_literal {
-            Some(Token::Error( a , b )) => {
-                return Err(Token::Error(a, b))
-            },
-            Some(symbol) => {
-                return Ok(symbol)
-            },
-            _ => ()
+        match buffer.peek_three_chars() {
+            ('.', '.', '.') => (),
+            _ => {
+
+                // Handle numbers except for those starting with a dot.
+                let number_literal = is_number_from_buffer(buffer);
+                match number_literal {
+                    Some(Token::Error( a , b )) => {
+                        return Err(Token::Error(a, b))
+                    },
+                    Some(symbol) => {
+                        return Ok(symbol)
+                    },
+                    _ => ()
+                }
+            }
         }
 
         // Handle strings except those starting with prefix.
