@@ -8,6 +8,7 @@ pub trait ExpressionMethods {
 	fn parse_atom_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_power(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_factor(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_term(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 }
 
 impl ExpressionMethods for Parser {
@@ -131,6 +132,51 @@ impl ExpressionMethods for Parser {
 			_ => self.parse_power()
 		}
 	}
+
+	/// Rule: term := factor ( ( '*' | '/' | '//' | '%' | '@' ) factor  )*
+	fn parse_term(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		let pos = self.get_position();
+		let mut res = self.parse_factor()?;
+
+		loop {
+			match self.get_symbol() {
+				Token::Mul( _ , _ ) => {
+					let symbol_mul = self.get_symbol();
+					self.advance();
+					let right = self.parse_factor()?;
+					res = Box::new(ParseNode::PyMul(pos, self.get_position(), res, Box::new(symbol_mul), right))
+				},
+				Token::Div( _ , _ ) => {
+					let symbol_div = self.get_symbol();
+					self.advance();
+					let right = self.parse_factor()?;
+					res = Box::new(ParseNode::PyDiv(pos, self.get_position(), res, Box::new(symbol_div), right))
+				},
+				Token::DoubleDiv( _ , _ ) => {
+					let symbol_double_div = self.get_symbol();
+					self.advance();
+					let right = self.parse_factor()?;
+					res = Box::new(ParseNode::PyFloorDiv(pos, self.get_position(), res, Box::new(symbol_double_div), right))
+				},
+				Token::Modulo( _ , _ ) => {
+					let symbol_modulo = self.get_symbol();
+					self.advance();
+					let right = self.parse_factor()?;
+					res = Box::new(ParseNode::PyModulo(pos, self.get_position(), res, Box::new(symbol_modulo), right))
+				},
+				Token::Decorator( _ , _ ) => {
+					let symbol_matrices = self.get_symbol();
+					self.advance();
+					let right = self.parse_factor()?;
+					res = Box::new(ParseNode::PyMatrices(pos, self.get_position(), res, Box::new(symbol_matrices), right))
+				},
+				_ => break
+			}
+		}
+
+		Ok(res)
+	}
+
 }
 
 #[cfg(test)]
