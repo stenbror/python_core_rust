@@ -333,7 +333,7 @@ impl ExpressionMethods for Parser {
 					let symbol_equal = self.get_symbol();
 					self.advance();
 					let right = self.parse_or_expr()?;
-					res = Box::new(ParseNode::PyLess(pos, self.get_position(), res, Box::new(symbol_equal), right))
+					res = Box::new(ParseNode::PyEqual(pos, self.get_position(), res, Box::new(symbol_equal), right))
 				},
 				Token::GreaterEqual(_, _) => {
 					let symbol_greater_equal = self.get_symbol();
@@ -404,6 +404,187 @@ mod tests {
 
 
 
+	#[test]
+	fn parse_single_less_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a < b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_comparison();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyLess(0, 5, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::Less(2, 3)), Box::new(ParseNode::PyName(4, 5, Box::new(Token::Name(4, 5, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_single_greater_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a > b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_comparison();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyGreater(0, 5, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::Greater(2, 3)), Box::new(ParseNode::PyName(4, 5, Box::new(Token::Name(4, 5, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_single_less_equal_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a <= b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_comparison();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyLessEqual(0, 6, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::LessEqual(2, 4)), Box::new(ParseNode::PyName(5, 6, Box::new(Token::Name(5, 6, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_single_greater_equal_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a >= b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_comparison();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyGreaterEqual(0, 6, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::GreaterEqual(2, 4)), Box::new(ParseNode::PyName(5, 6, Box::new(Token::Name(5, 6, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_single_equal_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a == b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_comparison();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyEqual(0, 6, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::Equal(2, 4)), Box::new(ParseNode::PyName(5, 6, Box::new(Token::Name(5, 6, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_single_not_equal_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a != b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_comparison();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyNotEqual(0, 6, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::NotEqual(2, 4)), Box::new(ParseNode::PyName(5, 6, Box::new(Token::Name(5, 6, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_single_is_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a is b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_comparison();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyIs(0, 6, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::Is(2, 4)), Box::new(ParseNode::PyName(5, 6, Box::new(Token::Name(5, 6, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_single_in_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a in b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_comparison();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyIn(0, 6, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::In(2, 4)), Box::new(ParseNode::PyName(5, 6, Box::new(Token::Name(5, 6, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_single_is_not_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a is not b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_comparison();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyIsNot(0, 10, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::Is(2, 4)), Box::new(Token::Not(5, 8)), Box::new(ParseNode::PyName(9, 10, Box::new(Token::Name(9, 10, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_single_not_in_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a not in b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_comparison();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyNotIn(0, 10, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::Not(2, 5)), Box::new(Token::In(6, 8)), Box::new(ParseNode::PyName(9, 10, Box::new(Token::Name(9, 10, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_multiple_less_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a < b < c\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_comparison();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyLess(0, 9, Box::new(
+					ParseNode::PyLess(0, 6, Box::new(
+						ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))
+					), Box::new(Token::Less(2, 3)), Box::new(
+						ParseNode::PyName(4, 6, Box::new(Token::Name(4, 5, "b".to_string())))
+					))
+				), Box::new(Token::Less(6, 7)), Box::new(ParseNode::PyName(8, 9, Box::new(Token::Name(8, 9, "c".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
 
 	#[test]
 	fn parse_star_expr() {
