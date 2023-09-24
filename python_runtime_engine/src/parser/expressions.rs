@@ -140,6 +140,39 @@ mod tests {
 	use super::*;
 
 
+
+	#[test]
+	fn parse_power_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a ** b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_factor();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyPower(0, 6, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::Power(2, 4)), Box::new(ParseNode::PyName(5, 6, Box::new(Token::Name(5, 6, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_no_power_operator() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_factor();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyName(0, 1, Box::new(Token::Name(0, 1, "a".to_string())))))
+			},
+			_ => assert!(false)
+		}
+	}
+
 	#[test]
 	fn parse_atom_expr_await_name() {
 		let mut buffer = SourceBuffer::new();
