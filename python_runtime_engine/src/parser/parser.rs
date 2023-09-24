@@ -3,9 +3,9 @@ use crate::parser::source_buffer::SourceBuffer;
 
 trait ParserMethods {
 	fn new(buffer: &mut SourceBuffer, tab_size: u8) -> Self;
-	fn get_symbol(self) -> Token;
-	fn get_position(self) -> u32;
-	fn advance(self) -> ();
+	fn get_symbol(&self) -> Token;
+	fn get_position(&self) -> u32;
+	fn advance(&mut self) -> ();
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -35,17 +35,16 @@ impl ParserMethods for Parser {
 		}
 	}
 
-	fn get_symbol(mut self) -> Token {
+	fn get_symbol(&self) -> Token {
 		match self.symbols.get(self.index as usize) {
 			Some(x) => {
-				self.index = self.index + 1;
 				x.clone()
 			},
 			_ => Token::Eof(0)
 		}
 	}
 
-	fn get_position(self) -> u32 {
+	fn get_position(&self) -> u32 {
 		match self.symbols.get(self.index as usize) {
 			Some(x) => {
 				match x.clone() {
@@ -139,15 +138,14 @@ impl ParserMethods for Parser {
 					Token::Name(s, _ , _) => s,
 					Token::String(s, _, _, _, _, _) => s,
 					Token::Number(s, _ , _) => s,
-					Token::TypeComment(s, _, _) => s,
-					_ => 0
+					Token::TypeComment(s, _, _) => s
 				}
 			},
 			_ => 0
 		}
 	}
 
-	fn advance(mut self) -> () {
+	fn advance(&mut self) -> () {
 		self.index = self.index + 1
 	}
 }
@@ -158,12 +156,61 @@ mod tests {
 	use super::*;
 
 	#[test]
-	fn test_1() {
+	fn test_general_parsing() {
 		let mut buffer = SourceBuffer::new();
 		buffer.from_text("for i in range(1, 100): pass\r\n");
 
-		let parser = Parser::new(&mut buffer, 4);
+		let mut parser = Parser::new(&mut buffer, 4);
 
-		assert!(true)
+		assert_eq!(parser.get_symbol(), Token::For(0, 3));
+		assert_eq!(parser.get_position(), 0);
+		parser.advance();
+
+		assert_eq!(parser.get_symbol(), Token::Name(4, 5, "i".to_string()));
+		assert_eq!(parser.get_position(), 4);
+		parser.advance();
+
+		assert_eq!(parser.get_symbol(), Token::In(6, 8));
+		assert_eq!(parser.get_position(), 6);
+		parser.advance();
+
+		assert_eq!(parser.get_symbol(), Token::Name(9, 14, "range".to_string()));
+		assert_eq!(parser.get_position(), 9);
+		parser.advance();
+
+		assert_eq!(parser.get_symbol(), Token::LeftParen(14, 15));
+		assert_eq!(parser.get_position(), 14);
+		parser.advance();
+
+		assert_eq!(parser.get_symbol(), Token::Number(15, 16, "1".to_string()));
+		assert_eq!(parser.get_position(), 15);
+		parser.advance();
+
+		assert_eq!(parser.get_symbol(), Token::Comma(16, 17));
+		assert_eq!(parser.get_position(), 16);
+		parser.advance();
+
+		assert_eq!(parser.get_symbol(), Token::Number(18, 21, "100".to_string()));
+		assert_eq!(parser.get_position(), 18);
+		parser.advance();
+
+		assert_eq!(parser.get_symbol(), Token::RightParen(21, 22));
+		assert_eq!(parser.get_position(), 21);
+		parser.advance();
+
+		assert_eq!(parser.get_symbol(), Token::Colon(22, 23));
+		assert_eq!(parser.get_position(), 22);
+		parser.advance();
+
+		assert_eq!(parser.get_symbol(), Token::Pass(24, 28));
+		assert_eq!(parser.get_position(), 24);
+		parser.advance();
+
+		assert_eq!(parser.get_symbol(), Token::Newline(28, 30, '\r', '\n'));
+		assert_eq!(parser.get_position(), 28);
+		parser.advance();
+
+		assert_eq!(parser.get_symbol(), Token::Eof(30));
+		assert_eq!(parser.get_position(), 30);
 	}
 }
