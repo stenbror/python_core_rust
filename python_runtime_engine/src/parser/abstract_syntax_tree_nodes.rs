@@ -27,4 +27,5 @@ pub enum ParseNode {
 	PyBitAnd(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 	PyBitXor(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 	PyBitOr(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyStarExpr(u32, u32, Box<Token>, Box<ParseNode>),
 }

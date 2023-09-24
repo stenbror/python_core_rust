@@ -14,6 +14,8 @@ pub trait ExpressionMethods {
 	fn parse_and_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_xor_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_or_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_star_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_comparison(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 }
 
 impl ExpressionMethods for Parser {
@@ -293,6 +295,24 @@ impl ExpressionMethods for Parser {
 
 		Ok(res)
 	}
+
+	/// Rule: star_expr := '*' or_expr
+	fn parse_star_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		let pos = self.get_position();
+		match self.get_symbol() {
+			Token::Mul( _ , _ ) => {
+				let symbol = self.get_symbol();
+				self.advance();
+				let right = self.parse_or_expr()?;
+				Ok(Box::new(ParseNode::PyStarExpr(pos, self.get_position(), Box::new(symbol), right)))
+			},
+			_ => Err(SyntaxError::new("Expecting '*' in star expression!".to_string(), self.get_position()))
+		}
+	}
+
+	fn parse_comparison(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		todo!()
+	}
 }
 
 #[cfg(test)]
@@ -303,6 +323,22 @@ mod tests {
 
 
 
+
+	#[test]
+	fn parse_star_expr() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("*a\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_star_expr();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyStarExpr(0, 2, Box::new(Token::Mul(0, 1)), Box::new(ParseNode::PyName(1, 2, Box::new(Token::Name(1, 2, "a".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
 
 	#[test]
 	fn parse_single_bit_and_operator() {
