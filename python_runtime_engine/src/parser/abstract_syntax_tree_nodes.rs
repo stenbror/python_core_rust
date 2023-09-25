@@ -41,4 +41,7 @@ pub enum ParseNode {
 	PyNotTest(u32, u32, Box<Token>, Box<ParseNode>),
 	PyAndTest(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 	PyOrTest(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyLambda(u32, u32, Box<Token>, Option<Box<ParseNode>>, Box<Token>, Box<ParseNode>),
+	PyTest(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyNamedExpr(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 }

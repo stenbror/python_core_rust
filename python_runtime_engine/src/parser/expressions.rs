@@ -19,6 +19,10 @@ pub trait ExpressionMethods {
 	fn parse_not_test(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_and_test(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_or_test(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_lambda(&mut self, is_cond : bool) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_test_no_cond(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_test(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_named_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 }
 
 impl ExpressionMethods for Parser {
@@ -447,6 +451,88 @@ impl ExpressionMethods for Parser {
 		}
 
 		Ok(res)
+	}
+
+	/// Rule: lambda := 'lambda' [ VarArgsList ] ':' ( test | test_no_cond )
+	fn parse_lambda(&mut self, is_cond: bool) -> Result<Box<ParseNode>, SyntaxError> {
+		let pos = self.get_position();
+		match self.get_symbol() {
+			Token::Lambda(_ , _) => {
+				let symbol1 = self.get_symbol();
+				self.advance();
+
+				let first : Option<Box<ParseNode>> = match self.get_symbol() {
+					Token::Colon(_ , _) => None,
+					_ => None // Some(parse_var_args_list()?)
+				};
+
+				match self.get_symbol() {
+					Token::Colon(_ , _) => {
+						let symbol2 = self.get_symbol();
+						self.advance();
+						let second = match is_cond {
+							true => self.parse_test()?,
+							false => self.parse_test_no_cond()?
+						};
+
+						Ok(Box::new(ParseNode::PyLambda(pos, self.get_position(), Box::new(symbol1), first, Box::new(symbol2), second)))
+					},
+					_ => Err(SyntaxError::new("Missing ':' in 'lambda' statement!".to_string(), self.get_position()))
+ 				}
+			},
+			_ => Err(SyntaxError::new("Expecting 'lambda' in lambda expression!".to_string(), self.get_position()))
+		}
+	}
+
+	/// Rule: test_no_cond := or_test | lambda
+	fn parse_test_no_cond(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		match self.get_symbol() {
+			Token::Lambda(_ , _) => self.parse_lambda(false),
+			_ => self.parse_or_test()
+		}
+	}
+
+	/// Rule: test := or_test [ 'if' or_test 'else' test ] | lambda
+	fn parse_test(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		let pos = self.get_position();
+		match self.get_symbol() {
+			Token::Lambda(_ , _) => self.parse_lambda(true),
+			_ => {
+				let first = self.parse_or_test()?;
+				match self.get_symbol() {
+					Token::If(_ , _ ) => {
+						let symbol1 = self.get_symbol();
+						self.advance();
+						let second = self.parse_or_test()?;
+						match self.get_symbol() {
+							Token::Else(_ , _) => {
+								let symbol2 = self.get_symbol();
+								self.advance();
+								let third = self.parse_test()?;
+								Ok(Box::new(ParseNode::PyTest(pos, self.get_position(), first, Box::new(symbol1), second, Box::new(symbol2), third)))
+							},
+							_ => Err(SyntaxError::new("Expecting 'else' in test expression!".to_string(), self.get_position()))
+						}
+					},
+					_ => Ok(first)
+				}
+			}
+		}
+	}
+
+	/// Rule: named_expr := test ( ':=' test )
+	fn parse_named_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		let pos = self.get_position();
+		let left = self.parse_test()?;
+		match self.get_symbol() {
+			Token::ColonAssign(_ , _) => {
+				let symbol = self.get_symbol();
+				self.advance();
+				let right = self.parse_test()?;
+				Ok(Box::new(ParseNode::PyNamedExpr(pos, self.get_position(), left, Box::new(symbol),right)))
+			},
+			_ => Ok(left)
+		}
 	}
 }
 
