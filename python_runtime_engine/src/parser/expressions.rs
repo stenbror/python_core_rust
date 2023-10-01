@@ -560,6 +560,28 @@ mod tests {
 	}
 
 	#[test]
+	fn parse_multiple_or_test() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a or b or c\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_or_test();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyOrTest(0, 11, Box::new(
+					ParseNode::PyOrTest(0, 7, Box::new(
+						ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))
+					), Box::new(Token::Or(2, 4)), Box::new(
+						ParseNode::PyName(5, 7, Box::new(Token::Name(5, 6, "b".to_string())))
+					))
+				), Box::new(Token::Or(7, 9)), Box::new(ParseNode::PyName(10, 11, Box::new(Token::Name(10, 11, "c".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
 	fn parse_single_and_test() {
 		let mut buffer = SourceBuffer::new();
 		buffer.from_text("a and b\r\n");
