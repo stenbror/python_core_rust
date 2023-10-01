@@ -576,6 +576,28 @@ mod tests {
 	}
 
 	#[test]
+	fn parse_multiple_and_test() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a and b and c\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_and_test();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyAndTest(0, 13, Box::new(
+					ParseNode::PyAndTest(0, 8, Box::new(
+						ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))
+					), Box::new(Token::And(2, 5)), Box::new(
+						ParseNode::PyName(6, 8, Box::new(Token::Name(6, 7, "b".to_string())))
+					))
+				), Box::new(Token::And(8, 11)), Box::new(ParseNode::PyName(12, 13, Box::new(Token::Name(12, 13, "c".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
 	fn parse_single_not_test() {
 		let mut buffer = SourceBuffer::new();
 		buffer.from_text("not a\r\n");
