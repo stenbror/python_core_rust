@@ -538,6 +538,7 @@ impl ExpressionMethods for Parser {
 
 #[cfg(test)]
 mod tests {
+	use crate::parser::abstract_syntax_tree_nodes::ParseNode::PyName;
 	use crate::parser::parser::ParserMethods;
 	use crate::parser::source_buffer::{SourceBuffer, SourceBufferMethods};
 	use super::*;
@@ -553,6 +554,22 @@ mod tests {
 		match res {
 			Ok(x) => {
 				assert_eq!(x, Box::new(ParseNode::PyNamedExpr(0, 6, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::ColonAssign(2, 4)), Box::new(ParseNode::PyName(5, 6, Box::new(Token::Name(5, 6, "b".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_empty_test() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_test();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(PyName(0, 1, Box::new(Token::Name(0, 1, "a".to_string())))))
 			},
 			_ => assert!(false)
 		}
