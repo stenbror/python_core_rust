@@ -1,5 +1,6 @@
 use crate::parser::parser::{Parser, ParserMethods};
 use crate::parser::abstract_syntax_tree_nodes::*;
+use crate::parser::abstract_syntax_tree_nodes::ParseNode::{PyNone, PyTuple};
 use crate::parser::lexical_analyzer::Token;
 use crate::parser::syntax_error::{SyntaxError, SyntaxErrorMethods};
 
@@ -71,6 +72,48 @@ impl ExpressionMethods for Parser {
 					}
 				}
 				Ok(Box::new(ParseNode::PyString(pos, self.get_position(), Box::new(texts))))
+			},
+			Token::LeftParen( _ , _ ) => {
+				let symbol1 = self.get_symbol();
+				self.advance();
+				match self.get_symbol() {
+					Token::RightParen( _ , _ ) => {
+						let symbol2 = self.get_symbol();
+						self.advance();
+						Ok(Box::new(ParseNode::PyTuple(pos, self.get_position(), Box::new(symbol), None, Box::new(symbol2))))
+					},
+					_ => {
+						Ok(Box::new(PyNone(0, 0, Box::new(Token::None(0, 0))))) // Temporary placeholder!
+					}
+				}
+			},
+			Token::LeftBracket( _ , _ ) => {
+				let symbol1 = self.get_symbol();
+				self.advance();
+				match self.get_symbol() {
+					Token::RightBracket( _ , _ ) => {
+						let symbol2 = self.get_symbol();
+						self.advance();
+						Ok(Box::new(ParseNode::PyList(pos, self.get_position(), Box::new(symbol), None, Box::new(symbol2))))
+					},
+					_ => {
+						Ok(Box::new(PyNone(0, 0, Box::new(Token::None(0, 0))))) // Temporary placeholder!
+					}
+				}
+			},
+			Token::LeftCurly( _ , _ ) => {
+				let symbol1 = self.get_symbol();
+				self.advance();
+				match self.get_symbol() {
+					Token::RightCurly( _ , _ ) => {
+						let symbol2 = self.get_symbol();
+						self.advance();
+						Ok(Box::new(ParseNode::PyDictionary(pos, self.get_position(), Box::new(symbol), None, Box::new(symbol2))))
+					},
+					_ => {
+						Ok(Box::new(PyNone(0, 0, Box::new(Token::None(0, 0))))) // Temporary placeholder!
+					}
+				}
 			},
 			Token::Error(e_pos, e_text) => Err(SyntaxError::new(e_text.clone(), e_pos.clone())),
 			_ => Err(SyntaxError::new("Expecting valid literal!".to_string(), pos))
