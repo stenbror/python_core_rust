@@ -586,6 +586,55 @@ mod tests {
 	use crate::parser::source_buffer::{SourceBuffer, SourceBufferMethods};
 	use super::*;
 
+
+	#[test]
+	fn parse_atom_empty_tuple() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("()\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_named_expr();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyTuple(0, 2, Box::new(Token::LeftParen(0, 1)), None, Box::new(Token::RightParen(1, 2)))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_atom_empty_list() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("[]\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_named_expr();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyList(0, 2, Box::new(Token::LeftBracket(0, 1)), None, Box::new(Token::RightBracket(1, 2)))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_atom_empty_dictionary() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("{}\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_named_expr();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyDictionary(0, 2, Box::new(Token::LeftCurly(0, 1)), None, Box::new(Token::RightCurly(1, 2)))))
+			},
+			_ => assert!(false)
+		}
+	}
+
 	#[test]
 	fn parse_named_expr() {
 		let mut buffer = SourceBuffer::new();
