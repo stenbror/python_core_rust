@@ -44,4 +44,8 @@ pub enum ParseNode {
 	PyLambda(u32, u32, Box<Token>, Option<Box<ParseNode>>, Box<Token>, Box<ParseNode>),
 	PyTest(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 	PyNamedExpr(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyTuple(u32, u32, Box<Token>, Option<Box<ParseNode>>, Box<Token>),
+	PyList(u32, u32, Box<Token>, Option<Box<ParseNode>>, Box<Token>),
+	PySet(u32, u32, Box<Token>, Option<Box<ParseNode>>, Box<Token>),
+	PyDictionary(u32, u32, Box<Token>, Option<Box<ParseNode>>, Box<Token>),
 }
