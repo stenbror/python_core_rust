@@ -613,8 +613,33 @@ impl ExpressionMethods for Parser {
 		first
 	}
 
+	// Rule: test_list := test (',' test)* [',']
 	fn parse_test_list(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-		todo!()
+		let pos = self.get_position();
+		let first = self.parse_test();
+		match self.get_symbol() {
+			Token::Comma( _ , _ ) => {
+				let mut symbols = Vec::<Box<Token>>::new();
+				let mut nodes = Vec::<Box<ParseNode>>::new();
+				nodes.push(first?);
+				loop {
+					match self.get_symbol() {
+						Token::Comma( _ , _ ) => {
+							symbols.push(Box::new(self.get_symbol()));
+							self.advance();
+							match self.get_symbol() {
+								Token::SemiColon( _, _ ) | Token::Newline( _ , _ , _ , _ ) => break,
+								_ => nodes.push( self.parse_test()? )
+							}
+						},
+						_ => break
+					}
+				};
+				return Ok(Box::new(ParseNode::PyTestList(pos, self.get_position(), Box::new(nodes), Box::new(symbols))))
+			},
+			_ => ()
+		}
+		first
 	}
 }
 
