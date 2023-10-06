@@ -1,6 +1,5 @@
 use crate::parser::parser::{Parser, ParserMethods};
 use crate::parser::abstract_syntax_tree_nodes::*;
-use crate::parser::abstract_syntax_tree_nodes::ParseNode::{PyExprList, PyNone, PyTuple};
 use crate::parser::lexical_analyzer::Token;
 use crate::parser::syntax_error::{SyntaxError, SyntaxErrorMethods};
 
@@ -85,7 +84,7 @@ impl ExpressionMethods for Parser {
 						Ok(Box::new(ParseNode::PyTuple(pos, self.get_position(), Box::new(symbol), None, Box::new(symbol2))))
 					},
 					_ => {
-						Ok(Box::new(PyNone(0, 0, Box::new(Token::None(0, 0))))) // Temporary placeholder!
+						Ok(Box::new(ParseNode::PyNone(0, 0, Box::new(Token::None(0, 0))))) // Temporary placeholder!
 					}
 				}
 			},
@@ -99,7 +98,7 @@ impl ExpressionMethods for Parser {
 						Ok(Box::new(ParseNode::PyList(pos, self.get_position(), Box::new(symbol), None, Box::new(symbol2))))
 					},
 					_ => {
-						Ok(Box::new(PyNone(0, 0, Box::new(Token::None(0, 0))))) // Temporary placeholder!
+						Ok(Box::new(ParseNode::PyNone(0, 0, Box::new(Token::None(0, 0))))) // Temporary placeholder!
 					}
 				}
 			},
@@ -113,7 +112,7 @@ impl ExpressionMethods for Parser {
 						Ok(Box::new(ParseNode::PyDictionary(pos, self.get_position(), Box::new(symbol), None, Box::new(symbol2))))
 					},
 					_ => {
-						Ok(Box::new(PyNone(0, 0, Box::new(Token::None(0, 0))))) // Temporary placeholder!
+						Ok(Box::new(ParseNode::PyNone(0, 0, Box::new(Token::None(0, 0))))) // Temporary placeholder!
 					}
 				}
 			},
@@ -606,7 +605,7 @@ impl ExpressionMethods for Parser {
 						_ => break
 					}
 				};
-				return Ok(Box::new(PyExprList(pos, self.get_position(), Box::new(nodes), Box::new(symbols))))
+				return Ok(Box::new(ParseNode::PyExprList(pos, self.get_position(), Box::new(nodes), Box::new(symbols))))
 			},
 			_ => ()
 		}
