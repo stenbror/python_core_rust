@@ -1,5 +1,5 @@
 use crate::parser::parser::{Parser, ParserMethods};
-use crate::parser::abstract_syntax_tree_nodes::*;
+use crate::parser::abstract_syntax_tree_nodes::ParseNode;
 use crate::parser::lexical_analyzer::Token;
 use crate::parser::syntax_error::{SyntaxError, SyntaxErrorMethods};
 
