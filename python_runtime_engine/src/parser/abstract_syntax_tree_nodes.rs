@@ -48,4 +48,6 @@ pub enum ParseNode {
 	PyList(u32, u32, Box<Token>, Option<Box<ParseNode>>, Box<Token>),
 	PySet(u32, u32, Box<Token>, Option<Box<ParseNode>>, Box<Token>),
 	PyDictionary(u32, u32, Box<Token>, Option<Box<ParseNode>>, Box<Token>),
+	PyExprList(u32, u32, Box<Vec<Box<ParseNode>>>, Box<Vec<Box<Token>>>),
+	PyTestList(u32, u32, Box<Vec<Box<ParseNode>>>, Box<Vec<Box<Token>>>),
 }

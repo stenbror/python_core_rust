@@ -1,6 +1,6 @@
 use crate::parser::parser::{Parser, ParserMethods};
 use crate::parser::abstract_syntax_tree_nodes::*;
-use crate::parser::abstract_syntax_tree_nodes::ParseNode::{PyNone, PyTuple};
+use crate::parser::abstract_syntax_tree_nodes::ParseNode::{PyExprList, PyNone, PyTuple};
 use crate::parser::lexical_analyzer::Token;
 use crate::parser::syntax_error::{SyntaxError, SyntaxErrorMethods};
 
@@ -24,6 +24,8 @@ pub trait ExpressionMethods {
 	fn parse_test_no_cond(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_test(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_named_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_expr_list(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_test_list(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 }
 
 impl ExpressionMethods for Parser {
@@ -576,6 +578,43 @@ impl ExpressionMethods for Parser {
 			},
 			_ => Ok(left)
 		}
+	}
+
+	// Rule: expr_list := (expr|star_expr) (',' (expr|star_expr))* [',']
+	fn parse_expr_list(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		let pos = self.get_position();
+		let first = match self.get_symbol() {
+			Token::Mul( _ , _ ) => self.parse_star_expr(),
+			_ => self.parse_or_expr()
+		};
+		match self.get_symbol() {
+			Token::Comma( _ , _ ) => {
+				let mut symbols = Vec::<Box<Token>>::new();
+				let mut nodes = Vec::<Box<ParseNode>>::new();
+				nodes.push(first?);
+				loop {
+					match self.get_symbol() {
+						Token::Comma( _ , _ ) => {
+							symbols.push(Box::new(self.get_symbol()));
+							self.advance();
+							match self.get_symbol() {
+								Token::In( _, _ ) => break,
+								Token::Mul( _, _ ) => nodes.push( self.parse_star_expr()? ),
+								_ => nodes.push( self.parse_or_expr()? )
+							}
+						},
+						_ => break
+					}
+				};
+				return Ok(Box::new(PyExprList(pos, self.get_position(), Box::new(nodes), Box::new(symbols))))
+			},
+			_ => ()
+		}
+		first
+	}
+
+	fn parse_test_list(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		todo!()
 	}
 }
 
