@@ -1,6 +1,6 @@
 use crate::parser::parser::{Parser, ParserMethods};
 use crate::parser::abstract_syntax_tree_nodes::ParseNode;
-use crate::parser::lexical_analyzer::Token;
+use crate::parser::lexical_analyzer::{Token, tokenize_from_buffer};
 use crate::parser::syntax_error::{SyntaxError, SyntaxErrorMethods};
 
 pub trait ExpressionMethods {
@@ -25,6 +25,10 @@ pub trait ExpressionMethods {
 	fn parse_named_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_expr_list(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_test_list(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_arg_list(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_subscript_list(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_argument(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_subscript(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 }
 
 impl ExpressionMethods for Parser {
@@ -639,6 +643,72 @@ impl ExpressionMethods for Parser {
 			_ => ()
 		}
 		first
+	}
+
+	// Rule: arg_list := argument (',' argument)*  [',']
+	fn parse_arg_list(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		let pos = self.get_position();
+		let first = self.parse_argument();
+		match self.get_symbol() {
+			Token::Comma( _ , _ ) => {
+				let mut symbols = Vec::<Box<Token>>::new();
+				let mut nodes = Vec::<Box<ParseNode>>::new();
+				nodes.push(first?);
+				loop {
+					match self.get_symbol() {
+						Token::Comma( _ , _ ) => {
+							symbols.push(Box::new(self.get_symbol()));
+							self.advance();
+							match self.get_symbol() {
+								Token::RightParen( _, _ ) => break,
+								_ => nodes.push( self.parse_argument()? )
+							}
+						},
+						_ => break
+					}
+				};
+				return Ok(Box::new(ParseNode::PyArgList(pos, self.get_position(), Box::new(nodes), Box::new(symbols))))
+			},
+			_ => ()
+		}
+		first
+	}
+
+	fn parse_argument(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		todo!()
+	}
+
+	// Rule: subscript_list := subscript (',' subscript)* [',']
+	fn parse_subscript_list(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		let pos = self.get_position();
+		let first = self.parse_subscript();
+		match self.get_symbol() {
+			Token::Comma( _ , _ ) => {
+				let mut symbols = Vec::<Box<Token>>::new();
+				let mut nodes = Vec::<Box<ParseNode>>::new();
+				nodes.push(first?);
+				loop {
+					match self.get_symbol() {
+						Token::Comma( _ , _ ) => {
+							symbols.push(Box::new(self.get_symbol()));
+							self.advance();
+							match self.get_symbol() {
+								Token::RightBracket( _, _ ) => break,
+								_ => nodes.push( self.parse_subscript()? )
+							}
+						},
+						_ => break
+					}
+				};
+				return Ok(Box::new(ParseNode::PySubscriptList(pos, self.get_position(), Box::new(nodes), Box::new(symbols))))
+			},
+			_ => ()
+		}
+		first
+	}
+
+	fn parse_subscript(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		todo!()
 	}
 }
 
