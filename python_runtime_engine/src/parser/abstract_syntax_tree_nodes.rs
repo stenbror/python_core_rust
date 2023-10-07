@@ -59,4 +59,6 @@ pub enum ParseNode {
 	PySyncCompFor(u32, u32, Box<Token>, Box<ParseNode>, Box<Token>, Box<ParseNode>, Option<Box<ParseNode>>),
 	PyCompFor(u32, u32, Box<Token>, Box<ParseNode>),
 	PyCompIf(u32, u32, Box<Token>, Box<ParseNode>, Option<Box<ParseNode>>),
+	PyYieldExpr(u32, u32, Box<Token>, Box<ParseNode>),
+	PyYieldFromExpr(u32, u32, Box<Token>, Box<Token>, Box<ParseNode>),
 }

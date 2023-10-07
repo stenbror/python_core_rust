@@ -882,8 +882,28 @@ impl ExpressionMethods for Parser {
 		}
 	}
 
+	/// Rule: yield_expr := yield' [ 'from' test | testlist_star_expr ]
 	fn parse_yield_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-		todo!()
+		let pos = self.get_position();
+		match self.get_symbol() {
+			Token::Yield( _, _ ) => {
+				let symbol1 = self.get_symbol();
+				self.advance();
+				match self.get_symbol() {
+					Token::From( _ , _ ) => {
+						let symbol2 = self.get_symbol();
+						self.advance();
+						let right = self.parse_test()?;
+						Ok(Box::new(ParseNode::PyYieldFromExpr(pos, self.get_position(), Box::new(symbol1), Box::new(symbol2), right)))
+					},
+					_ => {
+						let right = self.parse_test()?; // Change to correct!
+						Ok(Box::new(ParseNode::PyYieldExpr(pos, self.get_position(), Box::new(symbol1), right)))
+					}
+				}
+			},
+			_ => Err(SyntaxError::new("Expect 'yield' in yield expression!".to_string(), pos))
+		}
 	}
 }
 
@@ -891,7 +911,7 @@ impl ExpressionMethods for Parser {
 
 #[cfg(test)]
 mod tests {
-	
+
 	use crate::parser::abstract_syntax_tree_nodes::ParseNode;
 	use crate::parser::parser::ParserMethods;
 	use crate::parser::source_buffer::{SourceBuffer, SourceBufferMethods};
