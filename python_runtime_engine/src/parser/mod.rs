@@ -4,3 +4,4 @@ mod parser;
 mod abstract_syntax_tree_nodes;
 mod expressions;
 mod syntax_error;
+mod statements;
