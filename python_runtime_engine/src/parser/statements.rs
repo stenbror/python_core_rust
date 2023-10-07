@@ -1,7 +1,7 @@
 use crate::parser::abstract_syntax_tree_nodes::ParseNode;
 use crate::parser::lexical_analyzer::Token;
 use crate::parser::parser::{Parser, ParserMethods};
-use crate::parser::syntax_error::SyntaxError;
+use crate::parser::syntax_error::{SyntaxError, SyntaxErrorMethods};
 
 pub trait StatementMethods {
     fn parse_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
@@ -56,8 +56,33 @@ impl StatementMethods for Parser {
         }
     }
 
+    /// Rule: simple_stmt := small_stmt (';' small_stmt)* [';'] NEWLINE
     fn parse_simple_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-        todo!()
+        let pos = self.get_position();
+        let mut nodes = Vec::<Box<ParseNode>>::new();
+        let mut separators = Vec::<Box<Token>>::new();
+        nodes.push(self.parse_small_stmt()?);
+        loop {
+            match self.get_symbol() {
+                Token::SemiColon( _ , _ ) => {
+                    separators.push(Box::new(self.get_symbol()));
+                    self.advance();
+                    match self.get_symbol() {
+                        Token::Newline( _ , _ , _ , _ ) => break,
+                        _ => nodes.push(self.parse_small_stmt()?)
+                    }
+                },
+                _ => break
+            }
+        }
+        match self.get_symbol() {
+            Token::Newline( _ , _ , _ , _ ) => {
+                let symbol = self.get_symbol();
+                self.advance();
+                Ok(Box::new(ParseNode::PySimpleStmt(pos, self.get_position(), Box::new(nodes), Box::new(separators), Box::new(symbol))))
+            },
+            _ => Err(SyntaxError::new("Missing <NewLine> in simple statement!".to_string(), pos))
+        }
     }
 
     fn parse_small_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {

@@ -3,6 +3,8 @@ use crate::parser::lexical_analyzer::Token;
 /// Nodes that represents a Python sourcecode parsed correctly
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ParseNode {
+
+	/* Expression nodes */
 	PyNone(u32, u32, Box<Token>),
 	PyFalse(u32, u32, Box<Token>),
 	PyTrue(u32, u32, Box<Token>),
@@ -68,6 +70,9 @@ pub enum ParseNode {
 	PyDictionaryEntry(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 	PySetContainer(u32, u32, Box<Vec<Box<ParseNode>>>, Box<Vec<Box<Token>>>),
 	PyDictionaryFrom(u32, u32, Box<Token>, Box<ParseNode>),
+
+	/* Statement nodes */
+	PySimpleStmt(u32, u32, Box<Vec<Box<ParseNode>>>, Box<Vec<Box<Token>>>, Box<Token>),
 
 
 	PyEvalInput(u32, u32, Box<ParseNode>, Box<Vec<Box<Token>>>),
