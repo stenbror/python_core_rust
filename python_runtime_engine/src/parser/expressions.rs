@@ -864,10 +864,22 @@ impl ExpressionMethods for Parser {
 		}
 	}
 
-
-
+	/// Rule: comp_if := 'if' test_nocond [comp_iter]
 	fn parse_comp_if(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-		todo!()
+		let pos = self.get_position();
+		match self.get_symbol() {
+			Token::If( _ , _ ) => {
+				let symbol = self.get_symbol();
+				self.advance();
+				let left = self.parse_test_no_cond()?;
+				let right = match self.get_symbol() {
+					Token::For( _ , _ ) | Token::Async( _ , _ ) | Token::If( _ , _ ) => Some(self.parse_comp_iter()?),
+					_ => None
+				};
+				Ok(Box::new(ParseNode::PyCompIf(pos, self.get_position(), Box::new(symbol), left, right)))
+			},
+			_ => Err(SyntaxError::new("Expect 'if' in comprehension expression!".to_string(), pos))
+		}
 	}
 
 	fn parse_yield_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
@@ -875,9 +887,12 @@ impl ExpressionMethods for Parser {
 	}
 }
 
+// Unittests for expression parser rules ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #[cfg(test)]
 mod tests {
-	use crate::parser::abstract_syntax_tree_nodes::ParseNode::PyName;
+	
+	use crate::parser::abstract_syntax_tree_nodes::ParseNode;
 	use crate::parser::parser::ParserMethods;
 	use crate::parser::source_buffer::{SourceBuffer, SourceBufferMethods};
 	use super::*;
@@ -957,7 +972,7 @@ mod tests {
 
 		match res {
 			Ok(x) => {
-				assert_eq!(x, Box::new(PyName(0, 1, Box::new(Token::Name(0, 1, "a".to_string())))))
+				assert_eq!(x, Box::new(ParseNode::PyName(0, 1, Box::new(Token::Name(0, 1, "a".to_string())))))
 			},
 			_ => assert!(false)
 		}
@@ -974,11 +989,11 @@ mod tests {
 		match res {
 			Ok(x) => {
 				assert_eq!(x, Box::new(ParseNode::PyTest(0, 13,
-											  Box::new(PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))),
+											  Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))),
 											  Box::new(Token::If(2, 4)),
-											  Box::new(PyName(5, 7, Box::new(Token::Name(5, 6, "b".to_string())))),
+											  Box::new(ParseNode::PyName(5, 7, Box::new(Token::Name(5, 6, "b".to_string())))),
 											  Box::new(Token::Else(7, 11)),
-											  Box::new(PyName(12, 13, Box::new(Token::Name(12, 13, "c".to_string())))))
+											  Box::new(ParseNode::PyName(12, 13, Box::new(Token::Name(12, 13, "c".to_string())))))
 				))
 			},
 			_ => assert!(false)

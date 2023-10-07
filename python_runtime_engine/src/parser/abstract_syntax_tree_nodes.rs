@@ -58,5 +58,5 @@ pub enum ParseNode {
 	PyArgument(u32, u32, Box<ParseNode>, Option<Box<Token>>, Option<Box<ParseNode>>),
 	PySyncCompFor(u32, u32, Box<Token>, Box<ParseNode>, Box<Token>, Box<ParseNode>, Option<Box<ParseNode>>),
 	PyCompFor(u32, u32, Box<Token>, Box<ParseNode>),
-
+	PyCompIf(u32, u32, Box<Token>, Box<ParseNode>, Option<Box<ParseNode>>),
 }
