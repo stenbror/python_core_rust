@@ -148,7 +148,12 @@ impl ExpressionMethods for Parser {
 		let right = self.parse_atom()?;
 		let mut trailers : Vec<Box<ParseNode>> = Vec::new();
 
-		// todo! add trailer handling here!
+		loop {
+			match self.get_symbol() {
+				Token::LeftParen( _ , _ ) | Token::LeftBracket( _ , _ ) | Token::Dot( _ , _ ) => trailers.push(self.parse_trailer()?),
+				_ => break
+			}
+		}
 
 		match &await_symbol {
 			Some(Token::Await( _, _ )) => {
