@@ -29,9 +29,14 @@ pub trait ExpressionMethods {
 	fn parse_subscript_list(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_argument(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_subscript(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
-
-
+	fn parse_test_list_comp(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_trailer(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_dictionary_set_maker(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_comp_iter(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_comp_for(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_comp_sync_for(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_comp_if(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_yield_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 }
 
 impl ExpressionMethods for Parser {
@@ -799,7 +804,35 @@ impl ExpressionMethods for Parser {
 		}
 	}
 
+	fn parse_test_list_comp(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		todo!()
+	}
+
+	fn parse_trailer(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		todo!()
+	}
+
+	fn parse_dictionary_set_maker(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		todo!()
+	}
+
+	fn parse_comp_iter(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		todo!()
+	}
+
 	fn parse_comp_for(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		todo!()
+	}
+
+	fn parse_comp_sync_for(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		todo!()
+	}
+
+	fn parse_comp_if(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		todo!()
+	}
+
+	fn parse_yield_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
 		todo!()
 	}
 }
