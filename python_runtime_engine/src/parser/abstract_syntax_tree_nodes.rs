@@ -77,4 +77,5 @@ pub enum ParseNode {
 
 
 	PyEvalInput(u32, u32, Box<ParseNode>, Box<Vec<Box<Token>>>),
+	PyFileInput(u32, u32, Box<Vec<Box<ParseNode>>>, Box<Vec<Box<Token>>>),
 }

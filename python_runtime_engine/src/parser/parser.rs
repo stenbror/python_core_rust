@@ -2,6 +2,7 @@ use crate::parser::abstract_syntax_tree_nodes::ParseNode;
 use crate::parser::expressions::ExpressionMethods;
 use crate::parser::lexical_analyzer::{Token, tokenize_from_buffer};
 use crate::parser::source_buffer::SourceBuffer;
+use crate::parser::statements::StatementMethods;
 use crate::parser::syntax_error::{SyntaxError, SyntaxErrorMethods};
 
 pub trait ParserMethods {
@@ -10,6 +11,7 @@ pub trait ParserMethods {
 	fn get_position(&self) -> u32;
 	fn advance(&mut self) -> ();
 	fn parse_eval_input(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_file_input(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -174,6 +176,24 @@ impl ParserMethods for Parser {
 			},
 			_ => Err(SyntaxError::new("Expecting end of file!".to_string(), pos))
 		}
+	}
+
+	/// Rule: file_input := (NEWLINE | stmt)* ENDMARKER
+	fn parse_file_input(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		let pos = self.get_position();
+		let mut newlines = Vec::<Box<Token>>::new();
+		let mut nodes = Vec::<Box<ParseNode>>::new();
+		loop {
+			match self.get_symbol() {
+				Token::Newline( _ , _ , _ , _ ) => {
+					newlines.push(Box::new(self.get_symbol()));
+					self.advance()
+				},
+				Token::Eof( _ ) => break,
+				_ => nodes.push(self.parse_stmt()?)
+			}
+		}
+		Ok(Box::new(ParseNode::PyFileInput(pos, self.get_position(), Box::new(nodes), Box::new(newlines))))
 	}
 }
 
