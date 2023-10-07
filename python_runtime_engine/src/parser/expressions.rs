@@ -1191,6 +1191,105 @@ mod tests {
 	use crate::parser::parser::ParserMethods;
 	use crate::parser::source_buffer::{SourceBuffer, SourceBufferMethods};
 	use super::*;
+	
+	#[test]
+	fn parse_expr_list_1() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("*a\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_expr_list();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyStarExpr(0, 2, Box::new(Token::Mul(0, 1)), Box::new(ParseNode::PyName(1, 2, Box::new(Token::Name(1, 2, "a".to_string())))))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_expr_list_2() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_expr_list();
+
+		match res {
+			Ok(x) => {
+				assert_eq!(x, Box::new(ParseNode::PyName(0, 1, Box::new(Token::Name(0, 1, "a".to_string())))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_expr_list_3() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a, in\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_expr_list();
+
+		match res {
+			Ok(x) => {
+				let mut nodes = Vec::<Box<ParseNode>>::new();
+				nodes.push(Box::new(ParseNode::PyName(0, 1, Box::new(Token::Name(0, 1, "a".to_string())))));
+				let mut separators = Vec::<Box<Token>>::new();
+				separators.push(Box::new(Token::Comma(1, 2)));
+				assert_eq!(x, Box::new(ParseNode::PyExprList(0, 3, Box::new(nodes), Box::new(separators))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_expr_list_4() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a, *b\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_expr_list();
+
+		match res {
+			Ok(x) => {
+				let mut nodes = Vec::<Box<ParseNode>>::new();
+				nodes.push(Box::new(ParseNode::PyName(0, 1, Box::new(Token::Name(0, 1, "a".to_string())))));
+				nodes.push(Box::new(ParseNode::PyStarExpr(3, 5, Box::new(Token::Mul(3, 4)), Box::new(ParseNode::PyName(4, 5, Box::new(Token::Name(4, 5, "b".to_string())))))));
+				let mut separators = Vec::<Box<Token>>::new();
+				separators.push(Box::new(Token::Comma(1, 2)));
+				assert_eq!(x, Box::new(ParseNode::PyExprList(0, 5, Box::new(nodes), Box::new(separators))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+	#[test]
+	fn parse_expr_list_5() {
+		let mut buffer = SourceBuffer::new();
+		buffer.from_text("a, *b, c\r\n");
+
+		let mut parser = Parser::new(&mut buffer, 4);
+		let res = parser.parse_expr_list();
+
+		match res {
+			Ok(x) => {
+				let mut nodes = Vec::<Box<ParseNode>>::new();
+				nodes.push(Box::new(ParseNode::PyName(0, 1, Box::new(Token::Name(0, 1, "a".to_string())))));
+				nodes.push(Box::new(ParseNode::PyStarExpr(3, 5, Box::new(Token::Mul(3, 4)), Box::new(ParseNode::PyName(4, 5, Box::new(Token::Name(4, 5, "b".to_string())))))));
+				nodes.push(Box::new(ParseNode::PyName(7, 8, Box::new(Token::Name(7, 8, "c".to_string())))));
+				let mut separators = Vec::<Box<Token>>::new();
+				separators.push(Box::new(Token::Comma(1, 2)));
+				separators.push(Box::new(Token::Comma(5, 6)));
+				assert_eq!(x, Box::new(ParseNode::PyExprList(0, 8, Box::new(nodes), Box::new(separators))))
+			},
+			_ => assert!(false)
+		}
+	}
+
+
+
 
 
 	#[test]
