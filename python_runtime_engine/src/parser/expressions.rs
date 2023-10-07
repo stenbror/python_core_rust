@@ -824,8 +824,30 @@ impl ExpressionMethods for Parser {
 		}
 	}
 
+	/// Rule: comp_for := 'for' exprlist 'in' or_test [comp_iter]
 	fn parse_comp_for(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-		todo!()
+		let pos = self.get_position();
+		match self.get_symbol() {
+			Token::For( _ , _ ) => {
+				let symbol1 = self.get_symbol();
+				self.advance();
+				let left = self.parse_expr_list()?;
+				match self.get_symbol() {
+					Token::In( _ , _ ) => {
+						let symbol2 = self.get_symbol();
+						self.advance();
+						let right = self.parse_or_test()?;
+						let next = match self.get_symbol() {
+							Token::For( _ , _ ) | Token::Async( _ , _ ) | Token::If( _ , _ ) => Some(self.parse_comp_iter()?),
+							_ => None
+						};
+						Ok(Box::new(ParseNode::PyCompFor(pos, self.get_position(), Box::new(symbol1), left, Box::new(symbol2), right, next)))
+					},
+					_ => Err(SyntaxError::new("Expect 'in' in comprehension expression!".to_string(), pos))
+				}
+			},
+			_ => Err(SyntaxError::new("Expect 'for' in comprehension expression!".to_string(), pos))
+		}
 	}
 
 	fn parse_comp_sync_for(&mut self) -> Result<Box<ParseNode>, SyntaxError> {

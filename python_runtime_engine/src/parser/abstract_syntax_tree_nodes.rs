@@ -55,6 +55,7 @@ pub enum ParseNode {
 	PySubscript(u32, u32, Option<Box<ParseNode>>, Option<Box<Token>>, Option<Box<ParseNode>>, Option<Box<Token>>, Option<Box<ParseNode>>),
 	PyArgumentVarList(u32, u32, Box<Token>, Box<ParseNode>),
 	PyArgumentKeywordList(u32, u32, Box<Token>, Box<ParseNode>),
-	PyArgument(u32, u32, Box<ParseNode>, Option<Box<Token>>, Option<Box<ParseNode>>)
+	PyArgument(u32, u32, Box<ParseNode>, Option<Box<Token>>, Option<Box<ParseNode>>),
+	PyCompFor(u32, u32, Box<Token>, Box<ParseNode>, Box<Token>, Box<ParseNode>, Option<Box<ParseNode>>)
 
 }
