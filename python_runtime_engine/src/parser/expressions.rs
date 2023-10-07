@@ -1,6 +1,6 @@
 use crate::parser::parser::{Parser, ParserMethods};
 use crate::parser::abstract_syntax_tree_nodes::ParseNode;
-use crate::parser::lexical_analyzer::{Token, tokenize_from_buffer};
+use crate::parser::lexical_analyzer::Token;
 use crate::parser::syntax_error::{SyntaxError, SyntaxErrorMethods};
 
 pub trait ExpressionMethods {
@@ -29,6 +29,9 @@ pub trait ExpressionMethods {
 	fn parse_subscript_list(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_argument(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_subscript(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+
+
+	fn parse_comp_for(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 }
 
 impl ExpressionMethods for Parser {
@@ -169,7 +172,7 @@ impl ExpressionMethods for Parser {
 		}
 	}
 
-	// Rule: factor := ( '+' | '-' | '~' ) factor | power
+	/// Rule: factor := ( '+' | '-' | '~' ) factor | power
 	fn parse_factor(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
 		let pos = self.get_position();
 		match self.get_symbol() {
@@ -450,6 +453,7 @@ impl ExpressionMethods for Parser {
 		Ok(res)
 	}
 
+	/// Rule: not_test := 'not' not_test | comparison
 	fn parse_not_test(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
 		let pos = self.get_position();
 		match self.get_symbol() {
@@ -463,6 +467,7 @@ impl ExpressionMethods for Parser {
 		}
 	}
 
+	/// Rule: and_test := not_test ('and' not_test)*
 	fn parse_and_test(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
 		let pos = self.get_position();
 		let mut res = self.parse_not_test()?;
@@ -482,6 +487,7 @@ impl ExpressionMethods for Parser {
 		Ok(res)
 	}
 
+	/// Rule: or_test := and_test ('or' and_test)*
 	fn parse_or_test(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
 		let pos = self.get_position();
 		let mut res = self.parse_and_test()?;
@@ -583,7 +589,7 @@ impl ExpressionMethods for Parser {
 		}
 	}
 
-	// Rule: expr_list := (expr|star_expr) (',' (expr|star_expr))* [',']
+	/// Rule: expr_list := (expr|star_expr) (',' (expr|star_expr))* [',']
 	fn parse_expr_list(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
 		let pos = self.get_position();
 		let first = match self.get_symbol() {
@@ -616,7 +622,7 @@ impl ExpressionMethods for Parser {
 		first
 	}
 
-	// Rule: test_list := test (',' test)* [',']
+	/// Rule: test_list := test (',' test)* [',']
 	fn parse_test_list(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
 		let pos = self.get_position();
 		let first = self.parse_test();
@@ -645,7 +651,7 @@ impl ExpressionMethods for Parser {
 		first
 	}
 
-	// Rule: arg_list := argument (',' argument)*  [',']
+	/// Rule: arg_list := argument (',' argument)*  [',']
 	fn parse_arg_list(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
 		let pos = self.get_position();
 		let first = self.parse_argument();
@@ -674,11 +680,7 @@ impl ExpressionMethods for Parser {
 		first
 	}
 
-	fn parse_argument(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-		todo!()
-	}
-
-	// Rule: subscript_list := subscript (',' subscript)* [',']
+	/// Rule: subscript_list := subscript (',' subscript)* [',']
 	fn parse_subscript_list(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
 		let pos = self.get_position();
 		let first = self.parse_subscript();
@@ -707,7 +709,50 @@ impl ExpressionMethods for Parser {
 		first
 	}
 
+	/// Rule: argument := ( test [comp_for] |
+	///             test ':=' test |
+	///             test '=' test |
+	///             '**' test |
+	///             '*' test )
+	fn parse_argument(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		let pos = self.get_position();
+		match self.get_symbol() {
+			Token::Mul( _ , _ ) => {
+				let symbol = self.get_symbol();
+				self.advance();
+				let node = self.parse_test()?;
+				Ok(Box::new(ParseNode::PyArgumentVarList(pos, self.get_position(), Box::new(symbol), node)))
+			},
+			Token::Power( _ , _ ) => {
+				let symbol = self.get_symbol();
+				self.advance();
+				let node = self.parse_test()?;
+				Ok(Box::new(ParseNode::PyArgumentKeywordList(pos, self.get_position(), Box::new(symbol), node)))
+			},
+			_ => {
+				let left = self.parse_test()?;
+				match self.get_symbol() {
+					Token::For( _ , _ ) | Token::Async( _ , _ ) | Token::If( _ , _ ) => {
+						let right = self.parse_comp_for()?;
+						Ok(Box::new(ParseNode::PyArgument(pos, self.get_position(), left, None, Some(right))))
+					},
+					Token::ColonAssign( _ , _ ) | Token::Assign( _ , _ ) => {
+						let symbol = self.get_symbol();
+						self.advance();
+						let right = self.parse_test()?;
+						Ok(Box::new(ParseNode::PyArgument(pos, self.get_position(), left, Some(Box::new(symbol)), Some(right))))
+					},
+					_ => Ok(left)
+				}
+			}
+		}
+	}
+
 	fn parse_subscript(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		todo!()
+	}
+
+	fn parse_comp_for(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
 		todo!()
 	}
 }
