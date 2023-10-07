@@ -144,7 +144,29 @@ impl ExpressionMethods for Parser {
 						Ok(Box::new(ParseNode::PyDictionary(pos, self.get_position(), Box::new(symbol), None, Box::new(symbol2))))
 					},
 					_ => {
-						Ok(Box::new(ParseNode::PyNone(0, 0, Box::new(Token::None(0, 0))))) // Temporary placeholder!
+						let node = self.parse_dictionary_set_maker()?;
+						match &*node {
+							ParseNode::PyDictionaryContainer( _ , _ , _ , _ ) => {
+								match self.get_symbol() {
+									Token::RightCurly( _ , _ ) => {
+										let symbol2 = self.get_symbol();
+										self.advance();
+										Ok(Box::new(ParseNode::PyDictionary(pos, self.get_position(), Box::new(symbol), Some(node), Box::new(symbol2))))
+									},
+									_ => Err(SyntaxError::new("Expecting '}' in dictionary'!".to_string(), pos))
+								}
+							},
+							_ => {
+								match self.get_symbol() {
+									Token::RightCurly( _ , _ ) => {
+										let symbol2 = self.get_symbol();
+										self.advance();
+										Ok(Box::new(ParseNode::PySet(pos, self.get_position(), Box::new(symbol), Some(node), Box::new(symbol2))))
+									},
+									_ => Err(SyntaxError::new("Expecting '}' in Set'!".to_string(), pos))
+								}
+							}
+						}
 					}
 				}
 			},

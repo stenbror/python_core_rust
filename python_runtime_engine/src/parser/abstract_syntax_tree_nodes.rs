@@ -64,4 +64,7 @@ pub enum ParseNode {
 	PyDotName(u32, u32, Box<Token>, Box<Token>),
 	PyCall(u32, u32, Box<Token>, Option<Box<ParseNode>>, Box<Token>),
 	PyIndex(u32, u32, Box<Token>, Option<Box<ParseNode>>, Box<Token>),
+	PyDictionaryContainer(u32, u32, Box<Vec<Box<ParseNode>>>, Box<Vec<Box<Token>>>),
+	PyDictionaryEntry(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PySetContainer(u32, u32, Box<Vec<Box<ParseNode>>>, Box<Vec<Box<Token>>>),
 }
