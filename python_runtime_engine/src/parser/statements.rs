@@ -118,8 +118,17 @@ impl StatementMethods for Parser {
         todo!()
     }
 
+    /// Rule: pass_stmt := 'pass'
     fn parse_pass_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-        todo!()
+        let pos = self.get_position();
+        match self.get_symbol() {
+            Token::Pass( _ , _ ) => {
+                let symbol = self.get_symbol();
+                self.advance();
+                Ok(Box::new(ParseNode::PyPass(pos, self.get_position(), Box::new(symbol))))
+            },
+            _ => Err(SyntaxError::new("Missing <NewLine> in simple statement!".to_string(), pos))
+        }
     }
 
     fn parse_flow_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
@@ -200,11 +209,33 @@ impl StatementMethods for Parser {
 
 #[cfg(test)]
 mod tests {
+    use crate::parser::abstract_syntax_tree_nodes::ParseNode;
+    use crate::parser::expressions::ExpressionMethods;
+    use crate::parser::lexical_analyzer::Token;
+    use crate::parser::parser::{Parser, ParserMethods};
+    use crate::parser::source_buffer::{SourceBuffer, SourceBufferMethods};
+    use crate::parser::statements::StatementMethods;
 
     #[test]
-    fn parse_dummy_statement()
+    fn parse_pass_statement()
     {
-        assert_eq!(true, true)
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("pass\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_stmt();
+
+        let mut nodes = Vec::<Box<ParseNode>>::new();
+        nodes.push(Box::new(ParseNode::PyPass(0, 4, Box::new(Token::Pass(0, 4)))));
+        let mut separators = Vec::<Box<Token>>::new();
+        let newline = Box::new(Token::Newline(4, 6, '\r', '\n'));
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PySimpleStmt(0, 6, Box::new(nodes), Box::new(separators), newline)))
+            },
+            _ => assert!(false)
+        }
     }
 
 }
