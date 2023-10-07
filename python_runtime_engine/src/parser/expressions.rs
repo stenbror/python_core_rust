@@ -97,7 +97,18 @@ impl ExpressionMethods for Parser {
 						Ok(Box::new(ParseNode::PyTuple(pos, self.get_position(), Box::new(symbol), None, Box::new(symbol2))))
 					},
 					_ => {
-						Ok(Box::new(ParseNode::PyNone(0, 0, Box::new(Token::None(0, 0))))) // Temporary placeholder!
+						let node = match self.get_symbol() {
+							Token::Yield( _ , _ ) => self.parse_yield_expr()?,
+							_ => self.parse_test_list_comp()?
+						};
+						match self.get_symbol() {
+							Token::RightParen( _ , _ ) => {
+								let symbol2 = self.get_symbol();
+								self.advance();
+								Ok(Box::new(ParseNode::PyTuple(pos, self.get_position(), Box::new(symbol1), Some(node), Box::new(symbol2))))
+							},
+							_ => Err(SyntaxError::new("Expecting ')' in Tuple!".to_string(), pos))
+						}
 					}
 				}
 			},
@@ -111,7 +122,15 @@ impl ExpressionMethods for Parser {
 						Ok(Box::new(ParseNode::PyList(pos, self.get_position(), Box::new(symbol), None, Box::new(symbol2))))
 					},
 					_ => {
-						Ok(Box::new(ParseNode::PyNone(0, 0, Box::new(Token::None(0, 0))))) // Temporary placeholder!
+						let node = self.parse_test_list_comp()?;
+						match self.get_symbol() {
+							Token::RightBracket( _ , _ ) => {
+								let symbol2 = self.get_symbol();
+								self.advance();
+								Ok(Box::new(ParseNode::PyList(pos, self.get_position(), Box::new(symbol1), Some(node), Box::new(symbol2))))
+							},
+							_ => Err(SyntaxError::new("Expecting ']' in List!".to_string(), pos))
+						}
 					}
 				}
 			},
