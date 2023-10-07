@@ -824,8 +824,22 @@ impl ExpressionMethods for Parser {
 		}
 	}
 
-	/// Rule: comp_for := 'for' exprlist 'in' or_test [comp_iter]
+	/// Rule: comp_for := [ASYNC] sync_comp_for
 	fn parse_comp_for(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		let pos = self.get_position();
+		match self.get_symbol() {
+			Token::Async( _ , _ ) => {
+				let symbol = self.get_symbol();
+				self.advance();
+				let node = self.parse_comp_sync_for()?;
+				Ok(Box::new(ParseNode::PyCompFor(pos, self.get_position(), Box::new(symbol), node)))
+			},
+			_ => self.parse_comp_sync_for()
+		}
+	}
+
+	/// Rule: comp_sync_for := 'for' exprlist 'in' or_test [comp_iter]
+	fn parse_comp_sync_for(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
 		let pos = self.get_position();
 		match self.get_symbol() {
 			Token::For( _ , _ ) => {
@@ -841,7 +855,7 @@ impl ExpressionMethods for Parser {
 							Token::For( _ , _ ) | Token::Async( _ , _ ) | Token::If( _ , _ ) => Some(self.parse_comp_iter()?),
 							_ => None
 						};
-						Ok(Box::new(ParseNode::PyCompFor(pos, self.get_position(), Box::new(symbol1), left, Box::new(symbol2), right, next)))
+						Ok(Box::new(ParseNode::PySyncCompFor(pos, self.get_position(), Box::new(symbol1), left, Box::new(symbol2), right, next)))
 					},
 					_ => Err(SyntaxError::new("Expect 'in' in comprehension expression!".to_string(), pos))
 				}
@@ -850,9 +864,7 @@ impl ExpressionMethods for Parser {
 		}
 	}
 
-	fn parse_comp_sync_for(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-		todo!()
-	}
+
 
 	fn parse_comp_if(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
 		todo!()
