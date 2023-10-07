@@ -68,4 +68,7 @@ pub enum ParseNode {
 	PyDictionaryEntry(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 	PySetContainer(u32, u32, Box<Vec<Box<ParseNode>>>, Box<Vec<Box<Token>>>),
 	PyDictionaryFrom(u32, u32, Box<Token>, Box<ParseNode>),
+
+
+	PyEvalInput(u32, u32, Box<ParseNode>, Box<Vec<Box<Token>>>),
 }
