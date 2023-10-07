@@ -52,6 +52,7 @@ pub enum ParseNode {
 	PyTestList(u32, u32, Box<Vec<Box<ParseNode>>>, Box<Vec<Box<Token>>>),
 	PyArgList(u32, u32, Box<Vec<Box<ParseNode>>>, Box<Vec<Box<Token>>>),
 	PySubscriptList(u32, u32, Box<Vec<Box<ParseNode>>>, Box<Vec<Box<Token>>>),
+	PySubscript(u32, u32, Option<Box<ParseNode>>, Option<Box<Token>>, Option<Box<ParseNode>>, Option<Box<Token>>, Option<Box<ParseNode>>),
 	PyArgumentVarList(u32, u32, Box<Token>, Box<ParseNode>),
 	PyArgumentKeywordList(u32, u32, Box<Token>, Box<ParseNode>),
 	PyArgument(u32, u32, Box<ParseNode>, Option<Box<Token>>, Option<Box<ParseNode>>)

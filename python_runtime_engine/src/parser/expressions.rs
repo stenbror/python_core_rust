@@ -748,8 +748,55 @@ impl ExpressionMethods for Parser {
 		}
 	}
 
+	/// Rule: subscript := test | [test] ':' [test] [ ':' [test] ]
 	fn parse_subscript(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-		todo!()
+		let pos = self.get_position();
+		let mut symbol1 : Option<Box<Token>> = None;
+		let mut symbol2 : Option<Box<Token>> = None;
+		let mut first : Option<Box<ParseNode>> = None;
+		let mut second : Option<Box<ParseNode>> = None;
+		let mut third : Option<Box<ParseNode>> = None;
+
+		match self.get_symbol() {
+			Token::Colon( _ , _ ) => (),
+			_ => {
+				first = Some(self.parse_test()?)
+			}
+		}
+
+		match self.get_symbol() {
+			Token::Colon( _ , _ ) => {
+				symbol1 = Some(Box::new(self.get_symbol()));
+				self.advance();
+				match self.get_symbol() {
+					Token::Comma( _ , _ ) | Token::RightBracket( _ , _ ) => (),
+					_ => {
+						match self.get_symbol() {
+							Token::Colon( _ , _ ) => (),
+							_ => second = Some(self.parse_test()?)
+						}
+						match self.get_symbol() {
+							Token::Colon( _ , _ ) => {
+								symbol2 = Some(Box::new(self.get_symbol()));
+								self.advance();
+								match self.get_symbol() {
+									Token::Comma( _ , _ ) | Token::RightBracket( _ , _ ) => (),
+									_ => third = Some(self.parse_test()?)
+								}
+							},
+							_ => ()
+						}
+					}
+				}
+				Ok(Box::new(ParseNode::PySubscript(pos, self.get_position(), first, symbol1, second, symbol2, third)))
+			},
+			_ => {
+				match first {
+					Some(x) => Ok(x),
+					_ => Err(SyntaxError::new("Subscript need one element or ':' to be valid!".to_string(), pos))
+				}
+			}
+		}
 	}
 
 	fn parse_comp_for(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
