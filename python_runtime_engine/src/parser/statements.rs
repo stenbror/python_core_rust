@@ -1,5 +1,6 @@
 use crate::parser::abstract_syntax_tree_nodes::ParseNode;
-use crate::parser::parser::Parser;
+use crate::parser::lexical_analyzer::Token;
+use crate::parser::parser::{Parser, ParserMethods};
 use crate::parser::syntax_error::SyntaxError;
 
 pub trait StatementMethods {
@@ -31,8 +32,28 @@ pub trait StatementMethods {
 }
 
 impl StatementMethods for Parser {
+
+    /// Rule: stmt := compound_stmt | simple_stmt
     fn parse_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-        todo!()
+        let _pattern = "match".to_string();
+        match self.get_symbol() {
+            Token::Name( _ , _ , text ) => {
+                match text {
+                    _pattern => self.parse_compound_stmt(), // Positional keyword 'match'
+                    _ => self.parse_simple_stmt()
+                }
+            },
+            Token::If( _ , _ ) |
+            Token::For( _ , _ ) |
+            Token::Async( _ , _ ) |
+            Token::While( _ , _ ) |
+            Token::With( _ , _ ) |
+            Token::Try( _ , _ ) |
+            Token::Class( _ , _ ) |
+            Token::Def( _ , _ ) |
+            Token::Decorator( _ , _ ) => self.parse_compound_stmt(),
+            _ => self.parse_simple_stmt()
+        }
     }
 
     fn parse_simple_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
