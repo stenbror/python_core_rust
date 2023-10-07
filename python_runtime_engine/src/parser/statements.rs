@@ -1,4 +1,5 @@
 use crate::parser::abstract_syntax_tree_nodes::ParseNode;
+use crate::parser::expressions::ExpressionMethods;
 use crate::parser::lexical_analyzer::Token;
 use crate::parser::parser::{Parser, ParserMethods};
 use crate::parser::syntax_error::{SyntaxError, SyntaxErrorMethods};
@@ -85,8 +86,24 @@ impl StatementMethods for Parser {
         }
     }
 
+    /// Rule: small_stmt := (expr_stmt | del_stmt | pass_stmt | flow_stmt |
+    ///              import_stmt | global_stmt | nonlocal_stmt | assert_stmt)
     fn parse_small_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-        todo!()
+        match self.get_symbol() {
+            Token::Pass( _ , _ ) => self.parse_pass_stmt(),
+            Token::Del( _ , _ ) => self.parse_del_stmt(),
+            Token::Break( _ , _ ) |
+            Token::Continue( _ , _ ) |
+            Token::Return( _ , _ ) |
+            Token::Raise( _ , _ ) |
+            Token::Yield( _ , _ ) => self.parse_flow_stmt(),
+            Token::Import( _ , _ ) |
+            Token::From( _ , _ ) => self.parse_import_stmt(),
+            Token::Global( _ , _ ) => self.parse_global_stmt(),
+            Token::Nonlocal( _ , _ ) => self.parse_nonlocal_stmt(),
+            Token::Assert( _ , _ ) => self.parse_assert_stmt(),
+            _ => self.parse_expr_list()
+        }
     }
 
     fn parse_expr_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
