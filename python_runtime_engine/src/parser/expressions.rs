@@ -846,8 +846,57 @@ impl ExpressionMethods for Parser {
 		}
 	}
 
+	/// Rule: trailer := '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
 	fn parse_trailer(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-		todo!()
+		let pos = self.get_position();
+		match self.get_symbol() {
+			Token::LeftParen( _ , _ ) => {
+				let symbol1 = self.get_symbol();
+				self.advance();
+				let node = match self.get_symbol() {
+					Token::RightParen( _ , _ ) => None,
+					_ => Some(self.parse_arg_list()?)
+				};
+				match self.get_symbol() {
+					Token::RightParen( _ , _ ) => {
+						let symbol2 = self.get_symbol();
+						self.advance();
+						Ok(Box::new(ParseNode::PyCall(pos, self.get_position(), Box::new(symbol1), node, Box::new(symbol2))))
+					},
+					_ => Err(SyntaxError::new("Expect ')' in trailer expression!".to_string(), pos))
+				}
+			},
+			Token::LeftBracket( _ , _ ) => {
+				let symbol1 = self.get_symbol();
+				self.advance();
+				let node = match self.get_symbol() {
+					Token::RightBracket( _ , _ ) => None,
+					_ => Some(self.parse_subscript_list()?)
+				};
+				match self.get_symbol() {
+					Token::RightBracket( _ , _ ) => {
+						let symbol2 = self.get_symbol();
+						self.advance();
+						Ok(Box::new(ParseNode::PyIndex(pos, self.get_position(), Box::new(symbol1), node, Box::new(symbol2))))
+					},
+					_ => Err(SyntaxError::new("Expect ']' in trailer expression!".to_string(), pos))
+				}
+			},
+			Token::Dot( _ , _ ) => {
+				let symbol1 = self.get_symbol();
+				self.advance();
+				let symbol2 = match self.get_symbol() {
+					Token::Name( _ , _ , _ ) => {
+						let name = self.get_symbol();
+						self.advance();
+						name
+					},
+					_ => return Err(SyntaxError::new("Expect name literal after '.' in expression!".to_string(), pos))
+				};
+				Ok(Box::new(ParseNode::PyDotName(pos, self.get_position(), Box::new(symbol1), Box::new(symbol2))))
+			},
+			_ => Err(SyntaxError::new("Expect '(', '[' or '.' in trailer expression!".to_string(), pos))
+		}
 	}
 
 	fn parse_dictionary_set_maker(&mut self) -> Result<Box<ParseNode>, SyntaxError> {

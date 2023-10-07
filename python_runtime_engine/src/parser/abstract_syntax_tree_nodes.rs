@@ -61,4 +61,7 @@ pub enum ParseNode {
 	PyCompIf(u32, u32, Box<Token>, Box<ParseNode>, Option<Box<ParseNode>>),
 	PyYieldExpr(u32, u32, Box<Token>, Box<ParseNode>),
 	PyYieldFromExpr(u32, u32, Box<Token>, Box<Token>, Box<ParseNode>),
+	PyDotName(u32, u32, Box<Token>, Box<Token>),
+	PyCall(u32, u32, Box<Token>, Option<Box<ParseNode>>, Box<Token>),
+	PyIndex(u32, u32, Box<Token>, Option<Box<ParseNode>>, Box<Token>),
 }
