@@ -816,8 +816,12 @@ impl ExpressionMethods for Parser {
 		todo!()
 	}
 
+	/// Rule: comp_iter := comp_for | comp_if
 	fn parse_comp_iter(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-		todo!()
+		match self.get_symbol() {
+			Token::For( _ , _ ) | Token::Async( _ , _ ) => self.parse_comp_for(),
+			_ => self.parse_comp_if()
+		}
 	}
 
 	fn parse_comp_for(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
