@@ -1149,6 +1149,21 @@ impl ExpressionMethods for Parser {
 							symbols.push(Box::new(self.get_symbol()));
 							self.advance();
 							match self.get_symbol() {
+								Token::Colon( _, _ ) |
+								Token::Assign( _ , _ ) |
+								Token::PlusAssign( _ , _ ) |
+								Token::MinusAssign( _ , _ ) |
+								Token::MulAssign( _ , _ ) |
+								Token::PowerAssign( _ , _ ) |
+								Token::DivAssign( _ , _ ) |
+								Token::DoubleDivAssign( _ , _ ) |
+								Token::ModuloAssign( _ , _ ) |
+								Token::DecoratorAssign( _ , _ ) |
+								Token::ShiftLeftAssign( _ , _ ) |
+								Token::ShiftRightAssign( _ , _ ) |
+								Token::BitAndAssign( _ , _ ) |
+								Token::BitXorAssign( _ , _ ) |
+								Token::BitOrAssign( _ , _ ) |
 								Token::RightParen( _, _ ) => break,
 								_ => nodes.push( match self.get_symbol() {
 									Token::Mul( _ , _ ) => self.parse_star_expr()?,
