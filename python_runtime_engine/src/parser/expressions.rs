@@ -945,8 +945,100 @@ impl ExpressionMethods for Parser {
 		}
 	}
 
+	// Rule: Dictorsetmaker := ( ((test ':' test | '**' expr)
+	//                    (comp_for | (',' (test ':' test | '**' expr))* [','])) |
+	//                   ((test | star_expr)
+	//                    (comp_for | (',' (test | star_expr))* [','])) )
 	fn parse_dictionary_set_maker(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-		todo!()
+		let pos = self.get_position();
+		let mut nodes = Vec::<Box<ParseNode>>::new();
+		let mut separators = Vec::<Box<Token>>::new();
+		let mut is_dictionary = true;
+
+		match self.get_symbol() {
+			Token::Mul( _ , _ ) => {
+				nodes.push(self.parse_star_expr()?);
+				is_dictionary = false
+			},
+			Token::Power( _ , _ ) => {
+				let symbol = self.get_symbol();
+				self.advance();
+				let right = self.parse_test()?;
+				nodes.push(Box::new(ParseNode::PyDictionaryFrom(pos, self.get_position(), Box::new(symbol), right)))
+			},
+			_ => {
+					let left = self.parse_test()?;
+					match self.get_symbol() {
+						Token::Colon( _ , _ ) => {
+							let symbol = self.get_symbol();
+							self.advance();
+							let right = self.parse_test()?;
+							nodes.push(Box::new(ParseNode::PyDictionaryEntry(pos, self.get_position(), left, Box::new(symbol), right)))
+						},
+						_ => {
+							is_dictionary = false;
+							nodes.push(left)
+						}
+					}
+			}
+		}
+
+		match self.get_symbol() {
+			Token::For( _ , _ ) | Token::Async( _ , _ ) => {
+				nodes.push(self.parse_comp_for()?)
+			},
+			_ => {
+				loop {
+					match self.get_symbol() {
+						Token::Comma( _ , _ ) => {
+							separators.push(Box::new(self.get_symbol()));
+							self.advance();
+							match self.get_symbol() {
+								Token::RightCurly( _ , _ ) => break,
+								_ => {
+									match is_dictionary {
+										true => {
+											match self.get_symbol() {
+												Token::Power( _ , _ ) => {
+													let symbol2 = self.get_symbol();
+													self.advance();
+													let right = self.parse_test()?;
+													nodes.push(Box::new(ParseNode::PyDictionaryFrom(pos, self.get_position(), Box::new(symbol2), right)))
+												},
+												_ => {
+													let left = self.parse_test()?;
+													match self.get_symbol() {
+														Token::Colon( _ , _ ) => {
+															let symbol = self.get_symbol();
+															self.advance();
+															let right = self.parse_test()?;
+															nodes.push(Box::new(ParseNode::PyDictionaryEntry(pos, self.get_position(), left, Box::new(symbol), right)))
+														},
+														_ => return Err(SyntaxError::new("Expect ':' in dictionary entry!".to_string(), pos))
+													}
+												}
+											}
+										},
+										_ => {
+											nodes.push(match self.get_symbol() {
+												Token::Mul( _ , _ ) => self.parse_star_expr()?,
+												_ => self.parse_test()?
+											})
+										}
+									}
+								}
+							}
+						},
+						_ => break
+					}
+				}
+			}
+		}
+
+		match is_dictionary {
+			true => Ok(Box::new(ParseNode::PyDictionaryContainer(pos, self.get_position(), Box::new(nodes), Box::new(separators)))),
+			_ => Ok(Box::new(ParseNode::PySetContainer(pos, self.get_position(), Box::new(nodes), Box::new(separators))))
+		}
 	}
 
 	/// Rule: comp_iter := comp_for | comp_if
