@@ -805,8 +805,45 @@ impl ExpressionMethods for Parser {
 		}
 	}
 
+	/// Rule: test_list_comp := (namedexpr_test|star_expr) ( comp_for | (',' (namedexpr_test|star_expr))* [','] )
 	fn parse_test_list_comp(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-		todo!()
+		let pos = self.get_position();
+		let first = match self.get_symbol() {
+			Token::Mul( _ , _ ) => self.parse_star_expr()?,
+			_ => self.parse_named_expr()?
+		};
+		match self.get_symbol() {
+			Token::For( _ , _ ) | Token::Async( _ , _ ) => {
+				let node = self.parse_comp_for()?;
+				let mut nodes = Vec::<Box<ParseNode>>::new();
+				nodes.push(first);
+				nodes.push(node);
+				Ok(Box::new(ParseNode::PyTestList(pos, self.get_position(), Box::new(nodes), Box::new(Vec::<Box<Token>>::new()))))
+			},
+			Token::Comma( _ , _ ) => {
+				let mut nodes = Vec::<Box<ParseNode>>::new();
+				nodes.push(first);
+				let mut symbols = Vec::<Box<Token>>::new();
+				loop {
+					match self.get_symbol() {
+						Token::Comma( _ , _ ) => {
+							symbols.push(Box::new(self.get_symbol()));
+							self.advance();
+							match self.get_symbol() {
+								Token::RightParen( _ , _ ) | Token::RightBracket( _ , _ ) => break,
+								_ => nodes.push(match self.get_symbol() {
+									Token::Mul( _ , _ ) => self.parse_star_expr()?,
+									_ => self.parse_named_expr()?
+								})
+							}
+						},
+						_=> break
+					}
+				}
+				Ok(Box::new(ParseNode::PyTestList(pos, self.get_position(), Box::new(nodes), Box::new(symbols))))
+			},
+			_ => Ok(first)
+		}
 	}
 
 	fn parse_trailer(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
