@@ -37,6 +37,7 @@ pub trait ExpressionMethods {
 	fn parse_comp_sync_for(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_comp_if(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 	fn parse_yield_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+	fn parse_test_list_star_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
 }
 
 impl ExpressionMethods for Parser {
@@ -897,13 +898,48 @@ impl ExpressionMethods for Parser {
 						Ok(Box::new(ParseNode::PyYieldFromExpr(pos, self.get_position(), Box::new(symbol1), Box::new(symbol2), right)))
 					},
 					_ => {
-						let right = self.parse_test()?; // Change to correct!
+						let right = self.parse_test_list_star_expr()?;
 						Ok(Box::new(ParseNode::PyYieldExpr(pos, self.get_position(), Box::new(symbol1), right)))
 					}
 				}
 			},
 			_ => Err(SyntaxError::new("Expect 'yield' in yield expression!".to_string(), pos))
 		}
+	}
+
+	/// Rule: test_list_star_expr := (test|star_expr) (',' (test|star_expr))* [',']
+	fn parse_test_list_star_expr(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+		let pos = self.get_position();
+		let first = match self.get_symbol() {
+			Token::Mul( _ , _ ) => self.parse_star_expr()?,
+			_ => self.parse_test()?
+		};
+		match self.get_symbol() {
+			Token::Comma( _ , _ ) => {
+				let mut symbols = Vec::<Box<Token>>::new();
+				let mut nodes = Vec::<Box<ParseNode>>::new();
+				nodes.push(first);
+				loop {
+					match self.get_symbol() {
+						Token::Comma( _ , _ ) => {
+							symbols.push(Box::new(self.get_symbol()));
+							self.advance();
+							match self.get_symbol() {
+								Token::RightParen( _, _ ) => break,
+								_ => nodes.push( match self.get_symbol() {
+									Token::Mul( _ , _ ) => self.parse_star_expr()?,
+									_ => self.parse_test()?
+								} )
+							}
+						},
+						_ => break
+					}
+				};
+				return Ok(Box::new(ParseNode::PyTestList(pos, self.get_position(), Box::new(nodes), Box::new(symbols))))
+			},
+			_ => ()
+		}
+		Ok(first)
 	}
 }
 
