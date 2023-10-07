@@ -74,6 +74,7 @@ pub enum ParseNode {
 	/* Statement nodes */
 	PySimpleStmt(u32, u32, Box<Vec<Box<ParseNode>>>, Box<Vec<Box<Token>>>, Box<Token>),
 	PyPass(u32, u32, Box<Token>),
+	PyDel(u32, u32, Box<Token>, Box<ParseNode>),
 
 
 	PyEvalInput(u32, u32, Box<ParseNode>, Box<Vec<Box<Token>>>),

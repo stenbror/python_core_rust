@@ -114,8 +114,18 @@ impl StatementMethods for Parser {
         todo!()
     }
 
+    /// Rule: del_stmt := 'del' exprlist
     fn parse_del_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-        todo!()
+        let pos = self.get_position();
+        match self.get_symbol() {
+            Token::Del( _ , _ ) => {
+                let symbol = self.get_symbol();
+                self.advance();
+                let node = self.parse_expr_list()?;
+                Ok(Box::new(ParseNode::PyDel(pos, self.get_position(), Box::new(symbol), node)))
+            },
+            _ => Err(SyntaxError::new("Missing 'del' in del statement!".to_string(), pos))
+        }
     }
 
     /// Rule: pass_stmt := 'pass'
@@ -233,6 +243,28 @@ mod tests {
         match res {
             Ok(x) => {
                 assert_eq!(x, Box::new(ParseNode::PySimpleStmt(0, 6, Box::new(nodes), Box::new(separators), newline)))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn parse_del_statement()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("del a\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_stmt();
+
+        let mut nodes = Vec::<Box<ParseNode>>::new();
+        nodes.push(Box::new(ParseNode::PyDel(0, 5, Box::new(Token::Del(0, 3)), Box::new(ParseNode::PyName(4, 5, Box::new(Token::Name(4, 5, "a".to_string())))))));
+        let mut separators = Vec::<Box<Token>>::new();
+        let newline = Box::new(Token::Newline(5, 7, '\r', '\n'));
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PySimpleStmt(0, 7, Box::new(nodes), Box::new(separators), newline)))
             },
             _ => assert!(false)
         }
