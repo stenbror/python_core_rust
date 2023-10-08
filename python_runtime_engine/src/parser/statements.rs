@@ -197,16 +197,103 @@ impl StatementMethods for Parser {
         todo!()
     }
 
+    /// Rule: global_stmt := global' NAME (',' NAME)*
     fn parse_global_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-        todo!()
+        let pos = self.get_position();
+        match self.get_symbol() {
+            Token::Global( _ , _ ) => {
+                let symbol = self.get_symbol();
+                self.advance();
+                match self.get_symbol() {
+                    Token::Name( _ , _ , _ ) => {
+                        let mut names = Vec::<Box<Token>>::new();
+                        let mut separators = Vec::<Box<Token>>::new();
+                        names.push(Box::new(self.get_symbol()));
+                        self.advance();
+                        loop {
+                            match self.get_symbol() {
+                                Token::Comma( _ , _ ) => {
+                                    separators.push(Box::new(self.get_symbol()));
+                                    self.advance();
+                                    match self.get_symbol() {
+                                        Token::Name( _ , _ , _ ) => {
+                                            names.push(Box::new(self.get_symbol()));
+                                            self.advance()
+                                        }
+                                        _ => return Err(SyntaxError::new("Missing <NAME> literal after ',' in global statement!".to_string(), pos))
+                                    }
+                                },
+                                _ => break
+                            }
+                        }
+                        Ok(Box::new(ParseNode::PyGlobal(pos, self.get_position(), Box::new(symbol), Box::new(names), Box::new(separators))))
+                    },
+                    _ => Err(SyntaxError::new("Missing <NAME> literal in global statement!".to_string(), pos))
+                }
+            },
+            _ => Err(SyntaxError::new("Missing 'global' in global statement!".to_string(), pos))
+        }
     }
 
+    /// Rule: nonlocal := 'nonlocal' NAME (',' NAME)*
     fn parse_nonlocal_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-        todo!()
+        let pos = self.get_position();
+        match self.get_symbol() {
+            Token::Nonlocal( _ , _ ) => {
+                let symbol = self.get_symbol();
+                self.advance();
+                match self.get_symbol() {
+                    Token::Name( _ , _ , _ ) => {
+                        let mut names = Vec::<Box<Token>>::new();
+                        let mut separators = Vec::<Box<Token>>::new();
+                        names.push(Box::new(self.get_symbol()));
+                        self.advance();
+                        loop {
+                            match self.get_symbol() {
+                                Token::Comma( _ , _ ) => {
+                                    separators.push(Box::new(self.get_symbol()));
+                                    self.advance();
+                                    match self.get_symbol() {
+                                        Token::Name( _ , _ , _ ) => {
+                                            names.push(Box::new(self.get_symbol()));
+                                            self.advance()
+                                        }
+                                        _ => return Err(SyntaxError::new("Missing <NAME> literal after ',' in nonlocal statement!".to_string(), pos))
+                                    }
+                                },
+                                _ => break
+                            }
+                        }
+                        Ok(Box::new(ParseNode::PyNonLocal(pos, self.get_position(), Box::new(symbol), Box::new(names), Box::new(separators))))
+                    },
+                    _ => Err(SyntaxError::new("Missing <NAME> literal in nonlocal statement!".to_string(), pos))
+                }
+            },
+            _ => Err(SyntaxError::new("Missing 'nonlocal' in nonlocal statement!".to_string(), pos))
+        }
     }
 
+    /// Rule: assert := 'assert' test [',' test]
     fn parse_assert_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-        todo!()
+        let pos = self.get_position();
+        match self.get_symbol() {
+            Token::Assert( _ , _ ) => {
+                let symbol1 = self.get_symbol();
+                self.advance();
+                let first = self.parse_test()?;
+                match self.get_symbol() {
+                    Token::Comma( _ , _ ) => {
+                        let symbol2 = self.get_symbol();
+                        self.advance();
+                        let second = self.parse_test()?;
+                        return Ok(Box::new(ParseNode::PyAssert(pos, self.get_position(), Box::new(symbol1), first, Some(Box::new(symbol2)), Some(second))))
+                    }
+                    _ => ()
+                }
+                Ok(Box::new(ParseNode::PyAssert(pos, self.get_position(), Box::new(symbol1), first, None, None)))
+            },
+            _ => Err(SyntaxError::new("Missing 'assert' in assert statement!".to_string(), pos))
+        }
     }
 
     fn parse_compound_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {

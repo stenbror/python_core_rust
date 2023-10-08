@@ -76,6 +76,10 @@ pub enum ParseNode {
 	PyPass(u32, u32, Box<Token>),
 	PyDel(u32, u32, Box<Token>, Box<ParseNode>),
 
+	PyGlobal(u32, u32, Box<Token>, Box<Vec<Box<Token>>>, Box<Vec<Box<Token>>>),
+	PyNonLocal(u32, u32, Box<Token>, Box<Vec<Box<Token>>>, Box<Vec<Box<Token>>>),
+	PyAssert(u32, u32, Box<Token>, Box<ParseNode>, Option<Box<Token>>, Option<Box<ParseNode>>),
+
 
 	PyEvalInput(u32, u32, Box<ParseNode>, Box<Vec<Box<Token>>>),
 	PyFileInput(u32, u32, Box<Vec<Box<ParseNode>>>, Box<Vec<Box<Token>>>),
