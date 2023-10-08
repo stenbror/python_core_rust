@@ -477,4 +477,50 @@ mod tests {
         }
     }
 
+    #[test]
+    fn parse_assert_statement_single()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("assert a\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_stmt();
+
+        let mut nodes = Vec::<Box<ParseNode>>::new();
+        nodes.push(Box::new(ParseNode::PyAssert(0, 8, Box::new(Token::Assert(0, 6)), Box::new(ParseNode::PyName(7, 8, Box::new(Token::Name(7, 8, "a".to_string())))), None, None)));
+
+        let mut separators = Vec::<Box<Token>>::new();
+        let newline = Box::new(Token::Newline(8, 10, '\r', '\n'));
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PySimpleStmt(0, 10, Box::new(nodes), Box::new(separators), newline)))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn parse_assert_statement_multiple()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("assert a, b\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_stmt();
+
+        let mut nodes = Vec::<Box<ParseNode>>::new();
+        nodes.push(Box::new(ParseNode::PyAssert(0, 11, Box::new(Token::Assert(0, 6)), Box::new(ParseNode::PyName(7, 8, Box::new(Token::Name(7, 8, "a".to_string())))), Some(Box::new(Token::Comma(8, 9))), Some(Box::new(ParseNode::PyName(10, 11, Box::new(Token::Name(10, 11, "b".to_string()))))))));
+
+        let mut separators = Vec::<Box<Token>>::new();
+        let newline = Box::new(Token::Newline(11,13, '\r', '\n'));
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PySimpleStmt(0, 13, Box::new(nodes), Box::new(separators), newline)))
+            },
+            _ => assert!(false)
+        }
+    }
+
 }
