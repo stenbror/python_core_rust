@@ -417,4 +417,64 @@ mod tests {
         }
     }
 
+    #[test]
+    fn parse_nonlocal_statement_single()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("nonlocal a\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_stmt();
+
+        let mut nodes = Vec::<Box<ParseNode>>::new();
+
+        let mut nodes_nonlocal = Vec::<Box<Token>>::new();
+        nodes_nonlocal.push(Box::new(Token::Name(9, 10, "a".to_string())));
+
+        let mut separators = Vec::<Box<Token>>::new();
+
+        nodes.push(Box::new(ParseNode::PyNonLocal(0, 10, Box::new(Token::Nonlocal(0, 8)), Box::new(nodes_nonlocal), Box::new(separators))));
+
+        let mut separators = Vec::<Box<Token>>::new();
+        let newline = Box::new(Token::Newline(10, 12, '\r', '\n'));
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PySimpleStmt(0, 12, Box::new(nodes), Box::new(separators), newline)))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn parse_nonlocal_statement_multiple()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("nonlocal a, b\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_stmt();
+
+        let mut nodes = Vec::<Box<ParseNode>>::new();
+
+        let mut nodes_nonlocal = Vec::<Box<Token>>::new();
+        nodes_nonlocal.push(Box::new(Token::Name(9, 10, "a".to_string())));
+        nodes_nonlocal.push(Box::new(Token::Name(12, 13, "b".to_string())));
+
+        let mut separators = Vec::<Box<Token>>::new();
+        separators.push(Box::new(Token::Comma(10, 11)));
+
+        nodes.push(Box::new(ParseNode::PyNonLocal(0, 13, Box::new(Token::Nonlocal(0, 8)), Box::new(nodes_nonlocal), Box::new(separators))));
+
+        let mut separators = Vec::<Box<Token>>::new();
+        let newline = Box::new(Token::Newline(13, 15, '\r', '\n'));
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PySimpleStmt(0, 15, Box::new(nodes), Box::new(separators), newline)))
+            },
+            _ => assert!(false)
+        }
+    }
+
 }
