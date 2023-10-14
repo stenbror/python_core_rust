@@ -196,8 +196,26 @@ impl StatementMethods for Parser {
         }
     }
 
+    /// Rule: return_stmt := 'return' [testlist_star_expr]
     fn parse_return_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-        todo!()
+        let pos = self.get_position();
+        match self.get_symbol() {
+            Token::Return( _ , _ ) => {
+                let symbol = self.get_symbol();
+                self.advance();
+                match self.get_symbol() {
+                    Token::Newline( _ , _ , _ , _ ) |
+                    Token::SemiColon( _ , _ ) => {
+                        Ok(Box::new(ParseNode::PyReturn(pos, self.get_position(), Box::new(symbol), None)))
+                    },
+                    _ => {
+                        let right = self.parse_test_list_star_expr()?;
+                        Ok(Box::new(ParseNode::PyReturn(pos, self.get_position(), Box::new(symbol), Some(right))))
+                    }
+                }
+            },
+            _ => Err(SyntaxError::new("Expecting 'return' in return statement!".to_string(), pos))
+        }
     }
 
     fn parse_yield_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
@@ -595,6 +613,23 @@ mod tests {
         match res {
             Ok(x) => {
                 assert_eq!(x, Box::new(ParseNode::PyContinue(0, 8, Box::new(Token::Continue(0, 8)))))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn parse_simple_return_statement_without_flow_control()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("return\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_return_stmt();
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyReturn(0, 6, Box::new(Token::Return(0, 6)), None)))
             },
             _ => assert!(false)
         }

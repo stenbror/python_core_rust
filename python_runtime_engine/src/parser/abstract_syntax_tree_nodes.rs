@@ -77,6 +77,7 @@ pub enum ParseNode {
 	PyDel(u32, u32, Box<Token>, Box<ParseNode>),
 	PyBreak(u32, u32, Box<Token>),
 	PyContinue(u32, u32, Box<Token>),
+	PyReturn(u32, u32, Box<Token>, Option<Box<ParseNode>>),
 
 	PyGlobal(u32, u32, Box<Token>, Box<Vec<Box<Token>>>, Box<Vec<Box<Token>>>),
 	PyNonLocal(u32, u32, Box<Token>, Box<Vec<Box<Token>>>, Box<Vec<Box<Token>>>),
