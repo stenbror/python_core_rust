@@ -218,8 +218,9 @@ impl StatementMethods for Parser {
         }
     }
 
+    /// Rule: yield_stmt := [yield_expr]
     fn parse_yield_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-        todo!()
+        self.parse_yield_expr()
     }
 
     fn parse_raise_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
