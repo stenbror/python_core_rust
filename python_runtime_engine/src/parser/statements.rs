@@ -9,7 +9,7 @@ pub trait StatementMethods {
     fn parse_simple_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
     fn parse_small_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
     fn parse_expr_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
-    fn parse_annotate_assignment(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
+    fn parse_annotate_assignment(&mut self, left : Box<ParseNode>) -> Result<Box<ParseNode>, SyntaxError>;
     fn parse_del_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
     fn parse_pass_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
     fn parse_flow_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
@@ -106,11 +106,129 @@ impl StatementMethods for Parser {
         }
     }
 
+    /// Rule: expr_stmt := testlist_star_expr (annassign | augassign (yield_expr|testlist) |
+    ///                    [('=' (yield_expr|testlist_star_expr))+ [TYPE_COMMENT]] )
+    ///                     ('+=' | '-=' | '*=' | '@=' | '/=' | '%=' | '&=' | '|=' | '^=' |
+    ///                     '<<=' | '>>=' | '**=' | '//=')
     fn parse_expr_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-        todo!()
+        let pos = self.get_position();
+        let left = self.parse_test_list_star_expr()?;
+        match self.get_symbol() {
+            Token::PlusAssign( _ , _ ) => {
+                let symbol = self.get_symbol();
+                self.advance();
+                let right = match self.get_symbol() {
+                    Token::Yield( _ , _ ) => self.parse_yield_expr()?,
+                    _ => self.parse_test_list()?
+                };
+                Ok(Box::new(ParseNode::PyPlusAssign(pos, self.get_position(), left, Box::new(symbol), right)))
+            },
+            Token::MinusAssign( _ , _ ) => {
+                let symbol = self.get_symbol();
+                self.advance();
+                let right = match self.get_symbol() {
+                    Token::Yield( _ , _ ) => self.parse_yield_expr()?,
+                    _ => self.parse_test_list()?
+                };
+                Ok(Box::new(ParseNode::PyMinusAssign(pos, self.get_position(), left, Box::new(symbol), right)))
+            },
+            Token::MulAssign( _ , _ ) => {
+                let symbol = self.get_symbol();
+                self.advance();
+                let right = match self.get_symbol() {
+                    Token::Yield( _ , _ ) => self.parse_yield_expr()?,
+                    _ => self.parse_test_list()?
+                };
+                Ok(Box::new(ParseNode::PyMulAssign(pos, self.get_position(), left, Box::new(symbol), right)))
+            },
+            Token::DivAssign( _ , _ ) => {
+                let symbol = self.get_symbol();
+                self.advance();
+                let right = match self.get_symbol() {
+                    Token::Yield( _ , _ ) => self.parse_yield_expr()?,
+                    _ => self.parse_test_list()?
+                };
+                Ok(Box::new(ParseNode::PyDivAssign(pos, self.get_position(), left, Box::new(symbol), right)))
+            },
+            Token::DoubleDivAssign( _ , _ ) => {
+                let symbol = self.get_symbol();
+                self.advance();
+                let right = match self.get_symbol() {
+                    Token::Yield( _ , _ ) => self.parse_yield_expr()?,
+                    _ => self.parse_test_list()?
+                };
+                Ok(Box::new(ParseNode::PyFloorDiv(pos, self.get_position(), left, Box::new(symbol), right)))
+            },
+            Token::PowerAssign( _ , _ ) => {
+                let symbol = self.get_symbol();
+                self.advance();
+                let right = match self.get_symbol() {
+                    Token::Yield( _ , _ ) => self.parse_yield_expr()?,
+                    _ => self.parse_test_list()?
+                };
+                Ok(Box::new(ParseNode::PyPowerAssign(pos, self.get_position(), left, Box::new(symbol), right)))
+            },
+            Token::ModuloAssign( _ , _ ) => {
+                let symbol = self.get_symbol();
+                self.advance();
+                let right = match self.get_symbol() {
+                    Token::Yield( _ , _ ) => self.parse_yield_expr()?,
+                    _ => self.parse_test_list()?
+                };
+                Ok(Box::new(ParseNode::PyModuloAssign(pos, self.get_position(), left, Box::new(symbol), right)))
+            },
+            Token::BitAndAssign( _ , _ ) => {
+                let symbol = self.get_symbol();
+                self.advance();
+                let right = match self.get_symbol() {
+                    Token::Yield( _ , _ ) => self.parse_yield_expr()?,
+                    _ => self.parse_test_list()?
+                };
+                Ok(Box::new(ParseNode::PyBitAndAssign(pos, self.get_position(), left, Box::new(symbol), right)))
+            },
+            Token::BitXorAssign( _ , _ ) => {
+                let symbol = self.get_symbol();
+                self.advance();
+                let right = match self.get_symbol() {
+                    Token::Yield( _ , _ ) => self.parse_yield_expr()?,
+                    _ => self.parse_test_list()?
+                };
+                Ok(Box::new(ParseNode::PyBitXorAssign(pos, self.get_position(), left, Box::new(symbol), right)))
+            },
+            Token::BitOrAssign( _ , _ ) => {
+                let symbol = self.get_symbol();
+                self.advance();
+                let right = match self.get_symbol() {
+                    Token::Yield( _ , _ ) => self.parse_yield_expr()?,
+                    _ => self.parse_test_list()?
+                };
+                Ok(Box::new(ParseNode::PyBitAndAssign(pos, self.get_position(), left, Box::new(symbol), right)))
+            },
+            Token::ShiftLeftAssign( _ , _ ) => {
+                let symbol = self.get_symbol();
+                self.advance();
+                let right = match self.get_symbol() {
+                    Token::Yield( _ , _ ) => self.parse_yield_expr()?,
+                    _ => self.parse_test_list()?
+                };
+                Ok(Box::new(ParseNode::PyShiftLeftAssign(pos, self.get_position(), left, Box::new(symbol), right)))
+            },
+            Token::ShiftRightAssign( _ , _ ) => {
+                let symbol = self.get_symbol();
+                self.advance();
+                let right = match self.get_symbol() {
+                    Token::Yield( _ , _ ) => self.parse_yield_expr()?,
+                    _ => self.parse_test_list()?
+                };
+                Ok(Box::new(ParseNode::PyShiftRightAssign(pos, self.get_position(), left, Box::new(symbol), right)))
+            },
+            Token::Colon( _, _ ) => self.parse_annotate_assignment(left),
+            _ => Ok(left)
+        }
     }
 
-    fn parse_annotate_assignment(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
+    /// Rule: annotade_assignment := ':' test ['=' (yield_expr|testlist_star_expr)]
+    fn parse_annotate_assignment(&mut self, left : Box<ParseNode>) -> Result<Box<ParseNode>, SyntaxError> {
         todo!()
     }
 

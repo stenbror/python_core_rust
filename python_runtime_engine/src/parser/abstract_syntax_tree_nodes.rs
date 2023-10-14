@@ -73,6 +73,19 @@ pub enum ParseNode {
 
 	/* Statement nodes */
 	PySimpleStmt(u32, u32, Box<Vec<Box<ParseNode>>>, Box<Vec<Box<Token>>>, Box<Token>),
+	PyPlusAssign(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyMinusAssign(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyMulAssign(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyDivAssign(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyFloorDivAssign(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyBitAndAssign(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyBitXorAssign(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyBitOrAssign(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyShiftLeftAssign(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyShiftRightAssign(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyPowerAssign(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyModuloAssign(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+
 	PyPass(u32, u32, Box<Token>),
 	PyDel(u32, u32, Box<Token>, Box<ParseNode>),
 	PyBreak(u32, u32, Box<Token>),
