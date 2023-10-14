@@ -85,6 +85,7 @@ pub enum ParseNode {
 	PyShiftRightAssign(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 	PyPowerAssign(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 	PyModuloAssign(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
+	PyAnnotatedAssign(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>, Option<Box<Token>>, Option<Box<ParseNode>>),
 
 	PyPass(u32, u32, Box<Token>),
 	PyDel(u32, u32, Box<Token>, Box<ParseNode>),

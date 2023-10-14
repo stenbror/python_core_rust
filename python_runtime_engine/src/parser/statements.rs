@@ -9,7 +9,7 @@ pub trait StatementMethods {
     fn parse_simple_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
     fn parse_small_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
     fn parse_expr_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
-    fn parse_annotate_assignment(&mut self, left : Box<ParseNode>) -> Result<Box<ParseNode>, SyntaxError>;
+    fn parse_annotate_assignment(&mut self, pos: u32,  left : Box<ParseNode>) -> Result<Box<ParseNode>, SyntaxError>;
     fn parse_del_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
     fn parse_pass_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
     fn parse_flow_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError>;
@@ -222,14 +222,28 @@ impl StatementMethods for Parser {
                 };
                 Ok(Box::new(ParseNode::PyShiftRightAssign(pos, self.get_position(), left, Box::new(symbol), right)))
             },
-            Token::Colon( _, _ ) => self.parse_annotate_assignment(left),
+            Token::Colon( _, _ ) => self.parse_annotate_assignment(pos, left),
             _ => Ok(left)
         }
     }
 
     /// Rule: annotade_assignment := ':' test ['=' (yield_expr|testlist_star_expr)]
-    fn parse_annotate_assignment(&mut self, left : Box<ParseNode>) -> Result<Box<ParseNode>, SyntaxError> {
-        todo!()
+    fn parse_annotate_assignment(&mut self, pos: u32, left : Box<ParseNode>) -> Result<Box<ParseNode>, SyntaxError> {
+        let symbol = self.get_symbol();
+        self.advance();
+        let right = self.parse_test()?;
+        match self.get_symbol() {
+            Token::Assign( _ , _ ) => {
+                let symbol2 = self.get_symbol();
+                self.advance();
+                let next = match self.get_symbol() {
+                    Token::Yield( _ , _ ) => self.parse_yield_expr()?,
+                    _ => self.parse_test_list()?
+                };
+                Ok(Box::new(ParseNode::PyAnnotatedAssign(pos, self.get_position(), left, Box::new(symbol), right, Some(Box::new(symbol2)),Some(next))))
+            },
+            _ => Ok(Box::new(ParseNode::PyAnnotatedAssign(pos, self.get_position(), left, Box::new(symbol), right, None,None)))
+        }
     }
 
     /// Rule: del_stmt := 'del' exprlist
