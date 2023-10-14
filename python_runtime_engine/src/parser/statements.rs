@@ -170,7 +170,7 @@ impl StatementMethods for Parser {
         }
     }
 
-    /// break_stmt := 'break'
+    /// Rule: break_stmt := 'break'
     fn parse_break_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
         let pos = self.get_position();
         match self.get_symbol() {
@@ -182,8 +182,16 @@ impl StatementMethods for Parser {
         }
     }
 
+    /// Rule: continue_stmt := 'continue'
     fn parse_continue_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-        todo!()
+        let pos = self.get_position();
+        match self.get_symbol() {
+            Token::Continue( _ , _ ) => {
+                let symbol = self.get_symbol();
+                Ok(Box::new(ParseNode::PyContinue(pos, self.get_position(), Box::new(symbol))))
+            },
+            _ => Err(SyntaxError::new("Expecting 'continue' in continue statement!".to_string(), pos))
+        }
     }
 
     fn parse_return_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
