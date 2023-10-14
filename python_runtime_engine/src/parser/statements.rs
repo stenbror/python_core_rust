@@ -170,8 +170,16 @@ impl StatementMethods for Parser {
         }
     }
 
+    /// break_stmt := 'break'
     fn parse_break_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-        todo!()
+        let pos = self.get_position();
+        match self.get_position() {
+            Token::Break( _ , _ ) => {
+                let symbol = self.get_symbol();
+                Ok(Box::new(ParseNode::PyBreak(pos, self.get_position(), Box::new(symbol))))
+            },
+            _ => Err(SyntaxError::new("Expecting 'break' in break statement!".to_string(), pos))
+        }
     }
 
     fn parse_continue_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {

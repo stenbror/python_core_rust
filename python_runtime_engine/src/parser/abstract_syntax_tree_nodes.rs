@@ -75,6 +75,8 @@ pub enum ParseNode {
 	PySimpleStmt(u32, u32, Box<Vec<Box<ParseNode>>>, Box<Vec<Box<Token>>>, Box<Token>),
 	PyPass(u32, u32, Box<Token>),
 	PyDel(u32, u32, Box<Token>, Box<ParseNode>),
+	PyBreak(u32, u32, Box<Token>),
+	PyContinue(u32, u32, Box<Token>),
 
 	PyGlobal(u32, u32, Box<Token>, Box<Vec<Box<Token>>>, Box<Vec<Box<Token>>>),
 	PyNonLocal(u32, u32, Box<Token>, Box<Vec<Box<Token>>>, Box<Vec<Box<Token>>>),
