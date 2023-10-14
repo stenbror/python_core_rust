@@ -635,4 +635,21 @@ mod tests {
         }
     }
 
+    #[test]
+    fn parse_simple_return_statement_with_list_without_flow_control()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("return a\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_return_stmt();
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyReturn(0, 8, Box::new(Token::Return(0, 6)), Some(Box::new(ParseNode::PyName(7, 8, Box::new(Token::Name(7, 8, "a".to_string()))))))))
+            },
+            _ => assert!(false)
+        }
+    }
+
 }
