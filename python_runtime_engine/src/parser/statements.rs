@@ -176,6 +176,7 @@ impl StatementMethods for Parser {
         match self.get_symbol() {
             Token::Break( _ , _ ) => {
                 let symbol = self.get_symbol();
+                self.advance();
                 Ok(Box::new(ParseNode::PyBreak(pos, self.get_position(), Box::new(symbol))))
             },
             _ => Err(SyntaxError::new("Expecting 'break' in break statement!".to_string(), pos))
@@ -188,6 +189,7 @@ impl StatementMethods for Parser {
         match self.get_symbol() {
             Token::Continue( _ , _ ) => {
                 let symbol = self.get_symbol();
+                self.advance();
                 Ok(Box::new(ParseNode::PyContinue(pos, self.get_position(), Box::new(symbol))))
             },
             _ => Err(SyntaxError::new("Expecting 'continue' in continue statement!".to_string(), pos))
@@ -559,6 +561,40 @@ mod tests {
         match res {
             Ok(x) => {
                 assert_eq!(x, Box::new(ParseNode::PySimpleStmt(0, 13, Box::new(nodes), Box::new(separators), newline)))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn parse_simple_break_statement_without_flow_control()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("break\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_break_stmt();
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyBreak(0, 5, Box::new(Token::Break(0, 5)))))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn parse_simple_continue_statement_without_flow_control()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("continue\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_continue_stmt();
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyContinue(0, 8, Box::new(Token::Continue(0, 8)))))
             },
             _ => assert!(false)
         }
