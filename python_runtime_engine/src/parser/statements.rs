@@ -223,8 +223,26 @@ impl StatementMethods for Parser {
         self.parse_yield_expr()
     }
 
+    /// Rule: raise_stmt := 'raise' [test ['from' test]]
     fn parse_raise_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-        todo!()
+        let pos = self.get_position();
+        match self.get_symbol() {
+            Token::Raise( _ , _ ) => {
+                let symbol = self.get_symbol();
+                self.advance();
+                let left = self.parse_test()?;
+                match self.get_symbol() {
+                    Token::From( _ , _ ) => {
+                        let symbol2 = self.get_symbol();
+                        self.advance();
+                        let right = self.parse_test()?;
+                        Ok(Box::new(ParseNode::PyRaise(pos, self.get_position(), Box::new(symbol), left, Some(Box::new(symbol2)), Some(right))))
+                    },
+                    _ => Ok(Box::new(ParseNode::PyRaise(pos, self.get_position(), Box::new(symbol), left, None, None)))
+                }
+            },
+            _ => Err(SyntaxError::new("Expecting 'raise' in raise statement!".to_string(), pos))
+        }
     }
 
     fn parse_import_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
