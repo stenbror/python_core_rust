@@ -17,7 +17,9 @@ pub trait ParserMethods {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Parser {
 	symbols: Vec::<Token>,
-	index: u32
+	index: u32,
+	flow_level: u32,
+	func_level: u32
 }
 
 impl ParserMethods for Parser {
@@ -38,7 +40,9 @@ impl ParserMethods for Parser {
 
 		Parser {
 			symbols: _symbols,
-			index: 0
+			index: 0,
+			flow_level: 0,
+			func_level: 0
 		}
 	}
 

@@ -141,8 +141,33 @@ impl StatementMethods for Parser {
         }
     }
 
+    /// flow_stmt := break_stmt | continue_stmt | return_stmt | raise_stmt | yield_stmt
     fn parse_flow_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-        todo!()
+        match self.get_symbol() {
+            Token::Break( _ , _ ) => {
+
+                self.parse_break_stmt()
+            },
+            Token::Continue( _ , _ ) => {
+
+                self.parse_continue_stmt()
+            },
+            Token::Return( _ , _ ) => {
+
+                self.parse_return_stmt()
+            },
+            Token::Raise( _ , _ ) => {
+
+                self.parse_raise_stmt()
+            },
+            Token::Yield( _ , _ ) => {
+
+                self.parse_yield_stmt()
+            },
+            _ => {
+                Err(SyntaxError::new("Expecting 'break', 'continue', 'return', 'raise' or 'yield' in flow statement!".to_string(), self.get_position()))
+            }
+        }
     }
 
     fn parse_break_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
