@@ -671,4 +671,37 @@ mod tests {
         }
     }
 
+    #[test]
+    fn parse_simple_raise_statement_with_single_argument_without_flow_control()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("raise a\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_raise_stmt();
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyRaise(0, 7, Box::new(Token::Raise(0, 5)), Box::new(ParseNode::PyName(6, 7, Box::new(Token::Name(6, 7, "a".to_string())))), None, None)))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn parse_simple_raise_statement_with_double_argument_without_flow_control()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("raise a from b\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_raise_stmt();
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyRaise(0, 14, Box::new(Token::Raise(0, 5)), Box::new(ParseNode::PyName(6, 8, Box::new(Token::Name(6, 7, "a".to_string())))), Some(Box::new(Token::From(8, 12))), Some(Box::new(ParseNode::PyName(13, 14, Box::new(Token::Name(13, 14, "b".to_string()))))))))
+            },
+            _ => assert!(false)
+        }
+    }
 }
