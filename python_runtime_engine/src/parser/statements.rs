@@ -878,6 +878,23 @@ mod tests {
     }
 
     #[test]
+    fn parse_plus_assign_yield_statement()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("a += yield b\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_expr_stmt();
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyPlusAssign(0, 12, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::PlusAssign(2, 4)), Box::new(ParseNode::PyYieldExpr(5, 12, Box::new(Token::Yield(5, 10)), Box::new(ParseNode::PyName(11, 12, Box::new(Token::Name(11, 12, "b".to_string())))))))))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
     fn parse_minus_assign_statement()
     {
         let mut buffer = SourceBuffer::new();
