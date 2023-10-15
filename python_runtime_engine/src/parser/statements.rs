@@ -36,11 +36,10 @@ impl StatementMethods for Parser {
 
     /// Rule: stmt := compound_stmt | simple_stmt
     fn parse_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-        let _pattern = "match".to_string();
         match self.get_symbol() {
             Token::Name( _ , _ , text ) => {
-                match text {
-                    _pattern => self.parse_compound_stmt(), // Positional keyword 'match'
+                match text.as_str() {
+                    "match" => self.parse_compound_stmt(), // Positional keyword 'match'
                     _ => self.parse_simple_stmt()
                 }
             },
@@ -157,7 +156,7 @@ impl StatementMethods for Parser {
                     Token::Yield( _ , _ ) => self.parse_yield_expr()?,
                     _ => self.parse_test_list()?
                 };
-                Ok(Box::new(ParseNode::PyFloorDiv(pos, self.get_position(), left, Box::new(symbol), right)))
+                Ok(Box::new(ParseNode::PyFloorDivAssign(pos, self.get_position(), left, Box::new(symbol), right)))
             },
             Token::PowerAssign( _ , _ ) => {
                 let symbol = self.get_symbol();
@@ -202,7 +201,7 @@ impl StatementMethods for Parser {
                     Token::Yield( _ , _ ) => self.parse_yield_expr()?,
                     _ => self.parse_test_list()?
                 };
-                Ok(Box::new(ParseNode::PyBitAndAssign(pos, self.get_position(), left, Box::new(symbol), right)))
+                Ok(Box::new(ParseNode::PyBitOrAssign(pos, self.get_position(), left, Box::new(symbol), right)))
             },
             Token::ShiftLeftAssign( _ , _ ) => {
                 let symbol = self.get_symbol();
@@ -860,4 +859,231 @@ mod tests {
             _ => assert!(false)
         }
     }
+
+    #[test]
+    fn parse_plus_assign_statement()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("a += b\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_expr_stmt();
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyPlusAssign(0, 6, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::PlusAssign(2, 4)), Box::new(ParseNode::PyName(5, 6, Box::new(Token::Name(5, 6, "b".to_string())))))))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn parse_minus_assign_statement()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("a -= b\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_expr_stmt();
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyMinusAssign(0, 6, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::MinusAssign(2, 4)), Box::new(ParseNode::PyName(5, 6, Box::new(Token::Name(5, 6, "b".to_string())))))))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn parse_mul_assign_statement()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("a *= b\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_expr_stmt();
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyMulAssign(0, 6, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::MulAssign(2, 4)), Box::new(ParseNode::PyName(5, 6, Box::new(Token::Name(5, 6, "b".to_string())))))))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn parse_div_assign_statement()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("a /= b\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_expr_stmt();
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyDivAssign(0, 6, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::DivAssign(2, 4)), Box::new(ParseNode::PyName(5, 6, Box::new(Token::Name(5, 6, "b".to_string())))))))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn parse_modulo_assign_statement()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("a %= b\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_expr_stmt();
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyModuloAssign(0, 6, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::ModuloAssign(2, 4)), Box::new(ParseNode::PyName(5, 6, Box::new(Token::Name(5, 6, "b".to_string())))))))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn parse_bit_and_assign_statement()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("a &= b\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_expr_stmt();
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyBitAndAssign(0, 6, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::BitAndAssign(2, 4)), Box::new(ParseNode::PyName(5, 6, Box::new(Token::Name(5, 6, "b".to_string())))))))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn parse_bit_xor_assign_statement()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("a ^= b\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_expr_stmt();
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyBitXorAssign(0, 6, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::BitXorAssign(2, 4)), Box::new(ParseNode::PyName(5, 6, Box::new(Token::Name(5, 6, "b".to_string())))))))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn parse_bit_or_assign_statement()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("a |= b\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_expr_stmt();
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyBitOrAssign(0, 6, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::BitOrAssign(2, 4)), Box::new(ParseNode::PyName(5, 6, Box::new(Token::Name(5, 6, "b".to_string())))))))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn parse_floor_div_assign_statement()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("a //= b\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_expr_stmt();
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyFloorDivAssign(0, 7, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::DoubleDivAssign(2, 5)), Box::new(ParseNode::PyName(6, 7, Box::new(Token::Name(6, 7, "b".to_string())))))))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn parse_power_assign_statement()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("a **= b\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_expr_stmt();
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyPowerAssign(0, 7, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::PowerAssign(2, 5)), Box::new(ParseNode::PyName(6, 7, Box::new(Token::Name(6, 7, "b".to_string())))))))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn parse_shift_left_assign_statement()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("a <<= b\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_expr_stmt();
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyShiftLeftAssign(0, 7, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::ShiftLeftAssign(2, 5)), Box::new(ParseNode::PyName(6, 7, Box::new(Token::Name(6, 7, "b".to_string())))))))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn parse_shift_right_assign_statement()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("a >>= b\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_expr_stmt();
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyShiftRightAssign(0, 7, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::ShiftRightAssign(2, 5)), Box::new(ParseNode::PyName(6, 7, Box::new(Token::Name(6, 7, "b".to_string())))))))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    // #[test]
+    // fn parse_plus_assign_statement()
+    // {
+    //     let mut buffer = SourceBuffer::new();
+    //     buffer.from_text("a += b\r\n");
+    //
+    //     let mut parser = Parser::new(&mut buffer, 4);
+    //     let res = parser.parse_stmt();
+    //
+    //     let mut nodes = Vec::<Box<ParseNode>>::new();
+    //     nodes.push(Box::new(ParseNode::PyPlusAssign(0, 6, Box::new(ParseNode::PyName(0, 1, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::Assign(2, 4)), Box::new(ParseNode::PyName(5, 6, Box::new(Token::Name(5, 6, "b".to_string())))))));
+    //
+    //     let mut separators = Vec::<Box<Token>>::new();
+    //     let newline = Box::new(Token::Newline(11,13, '\r', '\n'));
+    //
+    //     match res {
+    //         Ok(x) => {
+    //             assert_eq!(x, Box::new(ParseNode::PySimpleStmt(0, 13, Box::new(nodes), Box::new(separators), newline)))
+    //         },
+    //         _ => assert!(false)
+    //     }
+    // }
 }
