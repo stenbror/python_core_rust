@@ -1098,6 +1098,40 @@ mod tests {
         }
     }
 
+    #[test]
+    fn parse_annotated_simple_statement()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("a : b\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_expr_stmt();
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyAnnotatedAssign(0, 5, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::Colon(2, 3)), Box::new(ParseNode::PyName(4, 5, Box::new(Token::Name(4, 5, "b".to_string())))), None, None)))
+            },
+            _ => assert!(false)
+        }
+    }
+
+    #[test]
+    fn parse_annotated_statement()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("a : b = c\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_expr_stmt();
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyAnnotatedAssign(0, 9, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(Token::Colon(2, 3)), Box::new(ParseNode::PyName(4, 6, Box::new(Token::Name(4, 5, "b".to_string())))), Some(Box::new(Token::Assign(6, 7))), Some(Box::new(ParseNode::PyName(8, 9, Box::new(Token::Name(8, 9, "c".to_string()))))))))
+            },
+            _ => assert!(false)
+        }
+    }
+
     // #[test]
     // fn parse_plus_assign_statement()
     // {
