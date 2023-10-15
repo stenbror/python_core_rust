@@ -420,8 +420,25 @@ impl StatementMethods for Parser {
         todo!()
     }
 
+    /// Rule: dotted_as_name := dotted_name ['as' NAME]
     fn parse_dotted_name_as_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-        todo!()
+        let pos = self.get_position();
+        let left = self.parse_dotted_name_stmt()?;
+        match self.get_symbol() {
+            Token::As( _ , _ ) => {
+                let symbol = self.get_symbol();
+                self.advance();
+                match self.get_symbol() {
+                    Token::Name( _ , _ , _ ) => {
+                        let right = self.get_symbol();
+                        self.advance();
+                        Ok(Box::new(ParseNode::PyDottedAsName(pos, self.get_position(), left, Box::new(symbol), Box::new(right))))
+                    },
+                    _ => Err(SyntaxError::new("Missing Name literal after 'as' in dotted as name statement!".to_string(), pos))
+                }
+            },
+            _ => Ok(left)
+        }
     }
 
     fn parse_import_as_names_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
