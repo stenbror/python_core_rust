@@ -408,8 +408,18 @@ impl StatementMethods for Parser {
         }
     }
 
+    /// Rule:: import_name := 'import' dotted_as_names
     fn parse_import_name_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-        todo!()
+        let pos = self.get_position();
+        match self.get_symbol() {
+            Token::Import( _ ,  _ ) => {
+                let symbol = self.get_symbol();
+                self.advance();
+                let right = self.parse_dotted_as_names_stmt()?;
+                Ok(Box::new(ParseNode::PyImport(pos, self.get_position(), Box::new(symbol), right)))
+            },
+            _ => Err(SyntaxError::new("Missing 'import' in import statement!".to_string(), pos))
+        }
     }
 
     fn parse_import_from_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
@@ -445,8 +455,23 @@ impl StatementMethods for Parser {
         todo!()
     }
 
+    /// Rule: dotted_as_names := dotted_as_name (',' dotted_as_name)*
     fn parse_dotted_as_names_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-        todo!()
+        let pos = self.get_position();
+        let mut nodes : Vec<Box<ParseNode>> = Vec::new();
+        let mut separators : Vec<Box<Token>> = Vec::new();
+        nodes.push(self.parse_dotted_name_as_stmt()?);
+        loop {
+            match self.get_symbol() {
+                Token::Comma( _ , _ ) => {
+                    separators.push(Box::new(self.get_symbol()));
+                    self.advance();
+                    nodes.push(self.parse_dotted_name_as_stmt()?)
+                },
+                _ => break
+            }
+        }
+        Ok(Box::new(ParseNode::PyDottedAsNames(pos, self.get_position(), Box::new(nodes), Box::new(separators))))
     }
 
     /// Rule: dotted_name_stmt := NAME ('.' NAME)*

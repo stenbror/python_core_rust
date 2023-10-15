@@ -94,6 +94,7 @@ pub enum ParseNode {
 	PyReturn(u32, u32, Box<Token>, Option<Box<ParseNode>>),
 	PyRaise(u32, u32, Box<Token>, Box<ParseNode>, Option<Box<Token>>, Option<Box<ParseNode>>),
 
+	PyImport(u32, u32, Box<Token>, Box<ParseNode>),
 	PyDottedAsNames(u32, u32, Box<Vec<Box<ParseNode>>>, Box<Vec<Box<Token>>>),
 	PyDottedAsName(u32, u32, Box<ParseNode>, Box<Token>, Box<Token>),
 	PyDottedName(u32, u32, Box<Vec<Box<Token>>>, Box<Vec<Box<Token>>>),
