@@ -1132,6 +1132,29 @@ mod tests {
         }
     }
 
+    #[test]
+    fn parse_assign_single_no_type_comment_statement()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("a = b\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_expr_stmt();
+
+        let mut right_symbols : Vec<Box<Token>> = Vec::new();
+        right_symbols.push(Box::new(Token::Assign(2, 3)));
+
+        let mut right_nodes : Vec<Box<ParseNode>> = Vec::new();
+        right_nodes.push(Box::new(ParseNode::PyName(4, 5, Box::new(Token::Name(4, 5, "b".to_string())))));
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyAssignment(0, 5, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(right_symbols), Box::new(right_nodes), None)))
+            },
+            _ => assert!(false)
+        }
+    }
+
     // #[test]
     // fn parse_plus_assign_statement()
     // {
