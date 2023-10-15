@@ -400,8 +400,12 @@ impl StatementMethods for Parser {
         }
     }
 
+    /// Rule: import_stmt := import_name | import_from
     fn parse_import_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-        todo!()
+        match self.get_symbol() {
+            Token::Import( _ , _ ) => self.parse_import_name_stmt(),
+            _ => self.parse_import_from_stmt()
+        }
     }
 
     fn parse_import_name_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
@@ -428,8 +432,35 @@ impl StatementMethods for Parser {
         todo!()
     }
 
+    /// Rule: dotted_name_stmt := NAME ('.' NAME)*
     fn parse_dotted_name_stmt(&mut self) -> Result<Box<ParseNode>, SyntaxError> {
-        todo!()
+        let pos = self.get_position();
+        let mut names_node : Vec<Box<Token>> = Vec::new();
+        let mut separators : Vec<Box<Token>> = Vec::new();
+        match self.get_symbol() {
+            Token::Name( _ , _ , _ ) => {
+                names_node.push(Box::new(self.get_symbol()));
+                self.advance();
+                loop {
+                    match self.get_symbol() {
+                        Token::Dot( _ , _ ) => {
+                            separators.push(Box::new(self.get_symbol()));
+                            self.advance();
+                            match self.get_symbol() {
+                                Token::Name( _ , _ , _ ) => {
+                                    names_node.push(Box::new(self.get_symbol()));
+                                    self.advance()
+                                },
+                                _ => break
+                            }
+                        },
+                        _ => break
+                    }
+                }
+            },
+            _ => return Err(SyntaxError::new("Missing Name literal in dotted name statement!".to_string(), pos))
+        }
+        Ok(Box::new(ParseNode::PyDottedName(pos, self.get_position(), Box::new(names_node), Box::new(separators))))
     }
 
     /// Rule: global_stmt := global' NAME (',' NAME)*

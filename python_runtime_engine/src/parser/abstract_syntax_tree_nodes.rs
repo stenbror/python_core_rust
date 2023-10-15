@@ -87,7 +87,6 @@ pub enum ParseNode {
 	PyModuloAssign(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 	PyAnnotatedAssign(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>, Option<Box<Token>>, Option<Box<ParseNode>>),
 	PyAssignment(u32, u32, Box<ParseNode>, Box<Vec<Box<Token>>>, Box<Vec<Box<ParseNode>>>, Option<Box<Token>>),
-
 	PyPass(u32, u32, Box<Token>),
 	PyDel(u32, u32, Box<Token>, Box<ParseNode>),
 	PyBreak(u32, u32, Box<Token>),
@@ -95,6 +94,7 @@ pub enum ParseNode {
 	PyReturn(u32, u32, Box<Token>, Option<Box<ParseNode>>),
 	PyRaise(u32, u32, Box<Token>, Box<ParseNode>, Option<Box<Token>>, Option<Box<ParseNode>>),
 
+	PyDottedName(u32, u32, Box<Vec<Box<Token>>>, Box<Vec<Box<Token>>>),
 	PyGlobal(u32, u32, Box<Token>, Box<Vec<Box<Token>>>, Box<Vec<Box<Token>>>),
 	PyNonLocal(u32, u32, Box<Token>, Box<Vec<Box<Token>>>, Box<Vec<Box<Token>>>),
 	PyAssert(u32, u32, Box<Token>, Box<ParseNode>, Option<Box<Token>>, Option<Box<ParseNode>>),
