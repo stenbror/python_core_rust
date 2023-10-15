@@ -1180,6 +1180,31 @@ mod tests {
         }
     }
 
+    #[test]
+    fn parse_assign_multiple_with_type_comment_statement()
+    {
+        let mut buffer = SourceBuffer::new();
+        buffer.from_text("a = b = c # type: int\r\n\r\n");
+
+        let mut parser = Parser::new(&mut buffer, 4);
+        let res = parser.parse_expr_stmt();
+
+        let mut right_symbols : Vec<Box<Token>> = Vec::new();
+        right_symbols.push(Box::new(Token::Assign(2, 3)));
+        right_symbols.push(Box::new(Token::Assign(6, 7)));
+
+        let mut right_nodes : Vec<Box<ParseNode>> = Vec::new();
+        right_nodes.push(Box::new(ParseNode::PyName(4, 6, Box::new(Token::Name(4, 5, "b".to_string())))));
+        right_nodes.push(Box::new(ParseNode::PyName(8, 10, Box::new(Token::Name(8, 9, "c".to_string())))));
+
+        match res {
+            Ok(x) => {
+                assert_eq!(x, Box::new(ParseNode::PyAssignment(0, 23, Box::new(ParseNode::PyName(0, 2, Box::new(Token::Name(0, 1, "a".to_string())))), Box::new(right_symbols), Box::new(right_nodes), Some(Box::new(Token::TypeComment(10, 23, "# type: int".to_string()))))))
+            },
+            _ => assert!(false)
+        }
+    }
+
     // #[test]
     // fn parse_plus_assign_statement()
     // {

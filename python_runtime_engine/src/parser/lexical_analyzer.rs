@@ -754,6 +754,7 @@ pub fn advance(buffer: &mut SourceBuffer, stack: &mut Vec<char>, is_at_beginning
                 continue
             },
             '#' => {
+                let mut end_pos = 0;
                 loop {
                     if buffer.is_end_of_file() {
                         return Err(Token::Error(buffer.index(), "Unexpected end  of file inside comment!".to_string()))
@@ -761,11 +762,13 @@ pub fn advance(buffer: &mut SourceBuffer, stack: &mut Vec<char>, is_at_beginning
                     match buffer.peek_three_chars() {
 
                         ( '\r', '\n', _ ) => {
+                            end_pos = buffer.index();
                             buffer.next();
                             buffer.next();
                             break;
                         },
                         ( '\r', _ , _ ) | ( '\n', _ , _ ) => {
+                            end_pos = buffer.index();
                             buffer.next();
                             break;
                         },
@@ -778,7 +781,7 @@ pub fn advance(buffer: &mut SourceBuffer, stack: &mut Vec<char>, is_at_beginning
                     }
                 }
 
-                let element = buffer.slice(start, buffer.index() - 1);
+                let element = buffer.slice(start, end_pos - 1);
 
                 match element {
                     Some(text)  => {
