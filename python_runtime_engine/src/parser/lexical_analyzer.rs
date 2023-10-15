@@ -3520,7 +3520,7 @@ mod tests {
 
         match res {
             Ok(y) => {
-                assert_eq!(y, Token::TypeComment(0, 13, "# type: int\r\n".to_string()))
+                assert_eq!(y, Token::TypeComment(0, 13, "# type: int".to_string()))
             },
             _ => assert!(false)
         }
