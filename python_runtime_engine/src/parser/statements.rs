@@ -222,6 +222,30 @@ impl StatementMethods for Parser {
                 };
                 Ok(Box::new(ParseNode::PyShiftRightAssign(pos, self.get_position(), left, Box::new(symbol), right)))
             },
+            Token::Assign( _ , _ ) => {
+                let mut symbols : Vec<Box<Token>> = Vec::new();
+                let mut nodes : Vec<Box<ParseNode>> = Vec::new();
+                loop {
+                    symbols.push(Box::new(self.get_symbol()));
+                    self.advance();
+                    match self.get_symbol() {
+                        Token::Yield( _ ,_ ) => nodes.push(self.parse_yield_expr()?),
+                        _ => nodes.push(self.parse_test_list_star_expr()?)
+                    };
+                    match self.get_symbol() {
+                        Token::Assign( _ , _ ) => (),
+                        _ => break
+                    }
+                };
+                match self.get_symbol() {
+                    Token::TypeComment( _ , _ , _ ) => {
+                        let symbol = self.get_symbol();
+                        self.advance();
+                        Ok(Box::new(ParseNode::PyAssignment(pos, self.get_position(), left, Box::new(symbols), Box::new(nodes), Some(Box::new(symbol)))))
+                    },
+                    _ => Ok(Box::new(ParseNode::PyAssignment(pos, self.get_position(), left, Box::new(symbols), Box::new(nodes), None)))
+                }
+            },
             Token::Colon( _, _ ) => self.parse_annotate_assignment(pos, left),
             _ => Ok(left)
         }

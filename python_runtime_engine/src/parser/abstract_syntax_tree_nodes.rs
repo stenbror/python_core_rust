@@ -86,6 +86,7 @@ pub enum ParseNode {
 	PyPowerAssign(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 	PyModuloAssign(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>),
 	PyAnnotatedAssign(u32, u32, Box<ParseNode>, Box<Token>, Box<ParseNode>, Option<Box<Token>>, Option<Box<ParseNode>>),
+	PyAssignment(u32, u32, Box<ParseNode>, Box<Vec<Box<Token>>>, Box<Vec<Box<ParseNode>>>, Option<Box<Token>>),
 
 	PyPass(u32, u32, Box<Token>),
 	PyDel(u32, u32, Box<Token>, Box<ParseNode>),
